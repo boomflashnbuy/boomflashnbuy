@@ -1,0 +1,44 @@
+{
+ "name": "BoomFlashnBuy",
+ "short_name": "BoomFlashnBuy",
+ "description": "Una foto al codice o una parola: il prezzo migliore su Amazon.",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#0B0C0A",
+ "theme_color": "#0B0C0A",
+ "lang": "it",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "BOOM! Scanner",
+   "short_name": "BOOM!",
+   "description": "Apre lo scanner per codici a barre",
+   "url": "./?boom=1",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192",
+     "type": "image/png"
+    }
+   ]
+  }
+ ]
+}

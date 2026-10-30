@@ -1,0 +1,8 @@
+/*
+  Permissions-Policy: camera=(self), microphone=(self)
+/sw.js
+  Cache-Control: no-cache
+/top4.json
+  Cache-Control: no-cache
+/media/*
+  Cache-Control: public, max-age=604800
