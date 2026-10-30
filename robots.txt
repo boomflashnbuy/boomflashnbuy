@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://boomflashnbuy.com/sitemap.xml
+Sitemap: https://boomflashnbuy.netlify.app/sitemap.xml
