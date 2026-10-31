@@ -141,7 +141,7 @@ def render(lg, key):
 <div class="cta"><a class="btn" href="/?boom=1&amp;lang={lg}">{D['open_scan']}</a><a class="btn g" href="/?lang={lg}">{D['open_app']}</a></div>
 <h2>{D['faq']}</h2>{fq}
 <h2>{D['more']}</h2><nav class="more">{more}<a href="{D['idx'][0]}">{D['idx'][1]} →</a></nav></main>
-<footer>{D['foot']} {D['legal']}<br>{D['upd']} {TODAY}.</footer></div></body></html>'''
+<footer>{D['foot']} {D['legal']}<br>{D['upd']} {TODAY}.</footer></div><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{{"token": "760e9648eaeb44438772afe1ac5bb2e1"}}'></script></body></html>'''
 
 def render_idx(lg):
     D = T[lg]; slug, title, desc, h1 = D['idx']
@@ -154,7 +154,7 @@ def render_idx(lg):
 <body><div class="w"><header><img src="/icons/icon-192.png" alt="" width="44" height="44"><a href="/?lang={lg}">Boom<em>Flash</em>nBuy</a></header>
 <main>{langbar(m, lg)}<h1>{h1}</h1><p class="lead">{html.escape(desc)}</p>
 <div class="cta"><a class="btn" href="/?boom=1&amp;lang={lg}">{D['open_scan']}</a><a class="btn g" href="/?lang={lg}">{D['open_app']}</a></div>
-<nav class="more">{items}</nav></main><footer>{D['foot']} {D['legal']}</footer></div></body></html>'''
+<nav class="more">{items}</nav></main><footer>{D['foot']} {D['legal']}</footer></div><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{{"token": "760e9648eaeb44438772afe1ac5bb2e1"}}'></script></body></html>'''
 
 new_urls = []
 for lg in T:

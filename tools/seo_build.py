@@ -59,7 +59,7 @@ def page(slug, title, desc, h1, body, faq=None, video=True, extra_ld=()):
 <div class="cta"><a class="btn" href="/?boom=1">📷 Apri lo scanner</a><a class="btn g" href="/">Apri l’app</a></div>
 {('<h2>Domande frequenti</h2>' + fq) if fq else ''}
 <h2>Altre guide</h2><nav class="more">{more}</nav></main>
-<footer>BoomFlashnBuy è gratis e funziona dal browser, senza registrazione. {LEGAL}<br>Aggiornato il {TODAY}.</footer></div></body></html>'''
+<footer>BoomFlashnBuy è gratis e funziona dal browser, senza registrazione. {LEGAL}<br>Aggiornato il {TODAY}.</footer></div><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{{"token": "760e9648eaeb44438772afe1ac5bb2e1"}}'></script></body></html>'''
 
 CTA_STEPS = '''<ol><li>Apri <a href="/">BoomFlashnBuy</a> dal telefono (o di' <b>“Ehi Siri: boom!”</b> su iPhone).</li>
 <li>Inquadra il <b>codice a barre</b> del prodotto: al bip l'app lo riconosce.</li>
