@@ -456,7 +456,8 @@ const X={
   c:{cheap:/barat|pre[cç]o mais baixo/,best:/avaliad|melhor/,newest:/novidade|novo/,open:/^(abre|abrir|vai|ok|mostra)\b/,save:/guard/,again:/nova pesquisa|recome[cç]/,gift:/ideias? de presente/,mk:{es:/espanha/,de:/alemanha/,fr:/fran[cç]a/,it:/it[aá]lia/}}}
 };
 const WHO_E=['🧔','👩','👨','👱‍♀️','🧒','🤝'],LIKE_E=['🍳','🏃','🎧','🛋️','✈️','🎲'],BUD=[20,30,50,100];
-const MK={it:['🇮🇹','amazon.it'],de:['🇩🇪','amazon.de'],fr:['🇫🇷','amazon.fr'],es:['🇪🇸','amazon.es'],uk:['🇬🇧','amazon.co.uk']};
+const MK={it:['🇮🇹','amazon.it'],de:['🇩🇪','amazon.de'],fr:['🇫🇷','amazon.fr'],es:['🇪🇸','amazon.es'],uk:['🇬🇧','amazon.co.uk'],us:['🇺🇸','amazon.com'],ca:['🇨🇦','amazon.ca'],mx:['🇲🇽','amazon.com.mx'],br:['🇧🇷','amazon.com.br'],au:['🇦🇺','amazon.com.au'],nl:['🇳🇱','amazon.nl'],be:['🇧🇪','amazon.com.be'],pl:['🇵🇱','amazon.pl'],se:['🇸🇪','amazon.se'],tr:['🇹🇷','amazon.com.tr'],ae:['🇦🇪','amazon.ae'],sa:['🇸🇦','amazon.sa'],eg:['🇪🇬','amazon.eg'],in:['🇮🇳','amazon.in'],jp:['🇯🇵','amazon.co.jp'],sg:['🇸🇬','amazon.sg']};
+function mkList(){const own=Object.keys(MK).find(k=>MK[k][1]===STORE);const eu=['it','de','fr','es','uk'];return [own,...eu.filter(x=>x!==own)].filter(Boolean).slice(0,5)}
 const P={
 it:[[['pied+fredd','fredd+ufficio','fredd+scrivania','gel+pied'],'Freddo ai piedi',['scaldapiedi elettrico','pantofole riscaldate','coperta elettrica']],
 [['muff','umid','condensa'],'Muffa e umidità',['deumidificatore','assorbiumidità','spray antimuffa']],
@@ -732,12 +733,12 @@ function camStart(v,onCode,onFail,opts){opts=opts||{};let alive=true,stream=null
    try{
     if(det){const r=await det.detect(v);if(r&&r.length){busy=false;return done(r[0].rawValue)}}
     if(ZW){const vw=v.videoWidth,vh=v.videoHeight;
-     const mode=n%3;const full=mode===0,tiny=mode===1;const sx=full?0:tiny?vw*.3:vw*.08,sy=full?0:tiny?vh*.3:vh*.22,sw=full?vw:tiny?vw*.4:vw*.84,sh=full?vh:tiny?vh*.4:vh*.56;const sc=tiny?Math.min(2.5,1400/sw):Math.min(1,1280/sw);
+     const mode=n%4;const full=mode===0,tiny=mode===1,micro=mode===3;const f=micro?.24:tiny?.4:.84,fh=micro?.24:tiny?.4:.56;const sx=full?0:vw*(1-f)/2,sy=full?0:vh*(1-fh)/2,sw=full?vw:vw*f,sh=full?vh:vh*fh;const sc=micro?Math.min(4,1600/sw):tiny?Math.min(2.5,1400/sw):Math.min(1,1280/sw);
      cv.width=Math.round(sw*sc);cv.height=Math.round(sh*sc);cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(v,sx,sy,sw,sh,0,0,cv.width,cv.height);
      const res=await ZW.readBarcodes(cx.getImageData(0,0,cv.width,cv.height),{formats:ZX_FORMATS,tryHarder:true,tryRotate:true,tryInvert:true,tryDownscale:true,maxNumberOfSymbols:1});
      const ok=res.find(x=>x.isValid&&x.text);if(ok){busy=false;return done(ok.text)}}
    }catch(e){}
-   busy=false;if(!warned&&Date.now()-t0>5000){warned=true;opts.onSlow&&opts.onSlow()}
+   busy=false;if(!api._az&&Date.now()-t0>3000){api._az=1;try{const cp=track.getCapabilities();if(cp.zoom&&cp.zoom.max>=1.8)track.applyConstraints({advanced:[{zoom:Math.min(2,cp.zoom.max)}]}).catch(()=>{})}catch(e){}}if(!warned&&Date.now()-t0>5000){warned=true;opts.onSlow&&opts.onSlow()}
    timer=setTimeout(tick,90)};
   tick()}).catch(fail);
  return api}
@@ -795,14 +796,18 @@ function scanLabel(r){const b=$('#sbx'),S=SCN[lang],P=PLK[lang],K=SC2[lang]||SC2
  const upd=()=>{const q=($('#lq').value||'').trim()||r.q;const v=parseFloat(($('#sp').value||'').replace(',','.'));const price=v>0?v:0;const o=Object.assign({what:q},price?{budget:Math.max(1,Math.ceil(price)-1)}:{});$('#scta').href=amazonUrl(o,price?{sort:'price-asc-rank'}:{});$('#sctat').textContent=price?`${P[2]} ${money(price)}`:P[3]};
  $('#lq').oninput=upd;$('#sp').oninput=upd;upd();$('#sag').onclick=scanOpen}
 
-async function lookupCode(code){const J=async u=>{const r=await fetch(u);if(!r.ok)throw r.status;return r.json()};const tries=[];
+async function lookupCode(code){try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');if(c[code]&&c[code].t>Date.now()-30*864e5)return c[code].r}catch(e){}
+ const r=await lookupCode0(code);if(r)try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r};const ks=Object.keys(c);if(ks.length>200)delete c[ks[0]];localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}return r}
+async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.ok)throw r.status;return r.json()};const tries=[];
+ /* varianti dello stesso codice: UPC-A (12 cifre) e EAN-13 con lo 0 davanti sono lo stesso prodotto */
+ const alt=code.length===12?'0'+code:(code.length===13&&code[0]==='0'?code.slice(1):'');
  if(/^97[89]/.test(code)){
   tries.push(async()=>{const j=await J('https://openlibrary.org/api/books?bibkeys=ISBN:'+code+'&format=json&jscmd=data');const v=j['ISBN:'+code];if(!v||!v.title)return null;const au=(v.authors||[]).map(x=>x.name);return {dep:'stripbooks',name:v.title,brand:au.join(', '),img:v.cover&&(v.cover.medium||v.cover.small),q:v.title+' '+(au[0]||'')}});
   tries.push(async()=>{const j=await J('https://www.googleapis.com/books/v1/volumes?q=isbn:'+code);const v=j.items&&j.items[0]&&j.items[0].volumeInfo;if(!v)return null;return {name:v.title,brand:(v.authors||[]).join(', '),img:v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail),q:v.title+' '+((v.authors||[])[0]||'')}})}
  const HDEP={'world.openfoodfacts.org':'grocery','world.openbeautyfacts.org':'beauty','world.openpetfoodfacts.org':'pets','world.openproductsfacts.org':''};
- for(const host of ['world.openfoodfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org','world.openproductsfacts.org'])tries.push(async()=>{const j=await J('https://'+host+'/api/v2/product/'+code+'.json?fields=product_name,product_name_'+lang+',generic_name,brands,quantity,image_front_small_url');const p=j&&j.status===1&&j.product;const nm=p&&(p['product_name_'+lang]||p.product_name||p.generic_name);if(!nm)return null;const bl=(p.brands||'').split(',').map(x=>x.trim()).filter(Boolean);const br=bl.find(x=>!/\b(srl|s\.?p\.?a|spa|services|gmbh|ltd|inc|sa)\b/i.test(x))||bl[0]||'';return {dep:HDEP[host],name:nm+(p.quantity?' · '+p.quantity:''),brand:br,img:p.image_front_small_url,q:(br&&!nm.toLowerCase().includes(br.toLowerCase())?br+' ':'')+nm+(p.quantity?' '+p.quantity:'')}});
+ for(const cc of [code,alt].filter(Boolean))for(const host of ['world.openfoodfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org','world.openproductsfacts.org'])tries.push(async()=>{const j=await J('https://'+host+'/api/v2/product/'+cc+'.json?fields=product_name,product_name_'+lang+',generic_name,brands,quantity,image_front_small_url');const p=j&&j.status===1&&j.product;const nm=p&&(p['product_name_'+lang]||p.product_name||p.generic_name);if(!nm)return null;const bl=(p.brands||'').split(',').map(x=>x.trim()).filter(Boolean);const br=bl.find(x=>!/\b(srl|s\.?p\.?a|spa|services|gmbh|ltd|inc|sa)\b/i.test(x))||bl[0]||'';return {dep:HDEP[host],name:nm+(p.quantity?' · '+p.quantity:''),brand:br,img:p.image_front_small_url,q:(br&&!nm.toLowerCase().includes(br.toLowerCase())?br+' ':'')+nm+(p.quantity?' '+p.quantity:'')}});
  const upcUrl=(/^https?:/.test(location.protocol)&&!/claude|claudeusercontent|localhost|127\.0\.0\.1/.test(location.hostname))?'/api/upc?upc=':'https://api.upcitemdb.com/prod/trial/lookup?upc=';
- tries.push(async()=>{const j=await J(upcUrl+code);const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:it.brand||'',img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
+ tries.push(async()=>{const q=code.length===13&&code[0]==='0'?code.slice(1):code;let j;try{j=await J(upcUrl+q)}catch(e){if(upcUrl[0]!=='/')throw e;j=await J('https://api.upcitemdb.com/prod/trial/lookup?upc='+q)}const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:it.brand||'',img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
  // tutte le banche dati in parallelo: vince la prima che risponde con un nome
  const wrap=t=>withTimeout(t(),6000).then(r=>{if(r&&r.name)return r;throw 0});
  try{const r=await Promise.any(tries.map(wrap));r.q=r.q.split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return null}}
@@ -811,7 +816,7 @@ function scanResult(code){const b=$('#sbx'),S=SCN[lang],P=PLK[lang];if(!b)return
  b.innerHTML=`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div><p class="sdesc" id="plk">⏳ ${P[0]}</p>`;
  lookupCode(code).then(info=>{if(!$('#sbx')||$('#sbx').className!=='sbx done')return;
   const o={what:info?info.q:code},oc={what:code};let price=0;
-  const mk=(lang==='en'?['uk','de','fr','es','it']:['it','de','fr','es']).map(m=>`<a href="${amazonUrl(o,{dom:MK[m][1]})}" target="_blank" rel="noopener sponsored" class="${MK[m][1]===L[lang].dom?'cur':''}">${MK[m][0]} ${m.toUpperCase()}</a>`).join('');
+  const mk=mkList().map(m=>`<a href="${amazonUrl(o,{dom:MK[m][1]})}" target="_blank" rel="noopener sponsored" class="${MK[m][1]===STORE?'cur':''}">${MK[m][0]} ${m.toUpperCase()}</a>`).join('');
   b.innerHTML=(info?`<div class="pcard">${info.img?`<img src="${esc(info.img)}" alt="" loading="lazy" onerror="this.remove()">`:''}<div><small>${S[2]} · ${esc(code)}</small><b>${esc(info.name)}</b>${info.brand?`<span>${esc(info.brand)}</span>`:''}</div></div>`
    :`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div><p class="sdesc">${P[4]}</p>`)+
   `<label class="pq">${P[1]}<span><input id="sp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label>
@@ -830,19 +835,35 @@ es:{t:'📡 Radar de hoy',s:'Las listas de Amazon, actualizadas cada hora',c:[['
 fr:{t:'📡 Radar du jour',s:'Les listes Amazon, mises à jour chaque heure',c:[['🏆','Meilleures ventes','le top du jour','/gp/bestsellers'],['🚀','Envolées 24h','les ventes qui montent','/gp/movers-and-shakers'],['⚡','Offres du jour','prix cassés aujourd’hui','/deals'],['✨','Nouveautés top','les sorties les plus voulues','/gp/new-releases']]},
 de:{t:'📡 Radar von heute',s:'Amazons Listen, stündlich aktualisiert',c:[['🏆','Bestseller','die Top von heute','/gp/bestsellers'],['🚀','Aufsteiger 24h','Verkäufe steigen','/gp/movers-and-shakers'],['⚡','Tagesangebote','heute reduziert','/deals'],['✨','Top Neuheiten','gefragteste Neuerscheinungen','/gp/new-releases']]},
 pt:{t:'📡 Radar de hoje',s:'As listas da Amazon, atualizadas a cada hora',c:[['🏆','Mais vendidos','o top de hoje','/gp/bestsellers'],['🚀','Disparados em 24h','vendas a subir','/gp/movers-and-shakers'],['⚡','Ofertas do dia','preços cortados hoje','/deals'],['✨','Novidades top','lançamentos mais procurados','/gp/new-releases']]}};
-function radUrl(p){return 'https://www.'+L[lang].dom+p+(AFF_TAG?(p.includes('?')?'&':'?')+'tag='+encodeURIComponent(AFF_TAG):'')}
+function radUrl(p){return 'https://www.'+STORE+p+(tagFor(STORE)?(p.includes('?')?'&':'?')+'tag='+encodeURIComponent(tagFor(STORE)):'')}
 
 const TOPT={it:'🏆 Top 4 della settimana',en:'🏆 Top 4 of the week',es:'🏆 Top 4 de la semana',fr:'🏆 Top 4 de la semaine',de:'🏆 Top 4 der Woche',pt:'🏆 Top 4 da semana'};
 const TOPS={it:'I più venduti al prezzo più basso, scelti ogni lunedì',en:'Best sellers at the lowest price, picked every Monday',es:'Los más vendidos al precio más bajo, cada lunes',fr:'Les meilleures ventes au prix le plus bas, chaque lundi',de:'Bestseller zum niedrigsten Preis, jeden Montag',pt:'Os mais vendidos ao preço mais baixo, todas as segundas'};
 let TOP4=null;
 fetch('top4.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.items&&j.items.length){TOP4=j;if(mode==='home')home()}}).catch(()=>{});
-function topHtml(){if(!TOP4||TOP4.dom!==L[lang].dom)return '';return `<div class="radar"><div class="rh"><b>${TOPT[lang]}</b><span>${TOPS[lang]}</span></div><div class="t4">${TOP4.items.slice(0,4).map((p,i)=>`<a class="idea" href="https://www.${TOP4.dom}/dp/${encodeURIComponent(p.asin)}${AFF_TAG?'?tag='+encodeURIComponent(AFF_TAG):''}" target="_blank" rel="noopener sponsored"><div><b>${i+1}. ${esc(p.name)}</b><small>${esc(p.cat||'')}</small></div><span>→</span></a>`).join('')}</div></div>`}
+function topHtml(){if(!TOP4||TOP4.dom!==STORE)return '';return `<div class="radar"><div class="rh"><b>${TOPT[lang]}</b><span>${TOPS[lang]}</span></div><div class="t4">${TOP4.items.slice(0,4).map((p,i)=>`<a class="idea" href="https://www.${TOP4.dom}/dp/${encodeURIComponent(p.asin)}${AFF_TAG?'?tag='+encodeURIComponent(AFF_TAG):''}" target="_blank" rel="noopener sponsored"><div><b>${i+1}. ${esc(p.name)}</b><small>${esc(p.cat||'')}</small></div><span>→</span></a>`).join('')}</div></div>`}
 const VL={it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-PT'};
 let last=null,mode='home',fromVoice=false,wz=null;
 const ttsOn=false; // risposta vocale disattivata: l'app risponde a schermo
-const cur=()=>lang==='en'?'£':'€';
+/* Negozio Amazon del paese del telefono (non solo della lingua) */
+const STORES={IT:'amazon.it',SM:'amazon.it',VA:'amazon.it',GB:'amazon.co.uk',UK:'amazon.co.uk',IE:'amazon.co.uk',GG:'amazon.co.uk',JE:'amazon.co.uk',IM:'amazon.co.uk',GI:'amazon.co.uk',MT:'amazon.co.uk',CY:'amazon.co.uk',
+ US:'amazon.com',PR:'amazon.com',CA:'amazon.ca',MX:'amazon.com.mx',BR:'amazon.com.br',AU:'amazon.com.au',NZ:'amazon.com.au',
+ ES:'amazon.es',AD:'amazon.es',PT:'amazon.es',FR:'amazon.fr',LU:'amazon.fr',MC:'amazon.fr',BE:'amazon.com.be',DE:'amazon.de',AT:'amazon.de',CH:'amazon.de',LI:'amazon.de',
+ NL:'amazon.nl',PL:'amazon.pl',SE:'amazon.se',TR:'amazon.com.tr',AE:'amazon.ae',SA:'amazon.sa',EG:'amazon.eg',IN:'amazon.in',JP:'amazon.co.jp',SG:'amazon.sg'};
+const STORE_BY_LANG={it:'amazon.it',en:'amazon.com',es:'amazon.es',fr:'amazon.fr',de:'amazon.de',pt:'amazon.es',nl:'amazon.nl',pl:'amazon.pl',sv:'amazon.se',tr:'amazon.com.tr',ja:'amazon.co.jp',ar:'amazon.ae'};
+const CUR={'amazon.it':'€','amazon.es':'€','amazon.fr':'€','amazon.de':'€','amazon.nl':'€','amazon.com.be':'€','amazon.co.uk':'£','amazon.com':'$','amazon.ca':'$','amazon.com.mx':'$','amazon.com.au':'$','amazon.sg':'$','amazon.com.br':'R$','amazon.pl':'zł','amazon.se':'kr','amazon.com.tr':'₺','amazon.co.jp':'¥','amazon.in':'₹','amazon.ae':'AED','amazon.sa':'SAR','amazon.eg':'EGP'};
+function pickStore(){try{const s=localStorage.getItem('snb-store');if(s&&CUR[s])return s}catch(e){}
+ const ls=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'']);
+ const EU=['GR','CY','CZ','SK','HU','RO','BG','HR','SI','DK','FI','EE','LV','LT','NO','IS','RS','BA','ME','MK','AL'];
+ let region='';for(const x of ls){const r=(String(x).split(/[-_]/)[1]||'').toUpperCase();if(STORES[r])return STORES[r];if(!region&&/^[A-Z]{2}$/.test(r))region=r}
+ if(region)return EU.includes(region)?'amazon.de':'amazon.com';
+ for(const x of ls){const n=String(x).slice(0,2).toLowerCase();if(STORE_BY_LANG[n])return STORE_BY_LANG[n]}
+ const n0=String(ls[0]||'').slice(0,2).toLowerCase();return ['el','cs','sk','hu','ro','bg','hr','sl','da','fi','et','lv','lt','no','nb'].includes(n0)?'amazon.de':'amazon.com'}
+let STORE=pickStore();
+const tagFor=d=>d==='amazon.it'?AFF_TAG:'';
+const cur=()=>CUR[STORE]||(lang==='en'?'£':'€');
 function amazonUrl(o,opt={}){const T=L[lang];const k=[o.what,o.size?T.size+' '+o.size:'',o.gift&&!o.what.includes(T.gift.toLowerCase())?T.gift:''].filter(Boolean).join(' ');
- let u='https://www.'+(opt.dom||T.dom)+'/s?k='+encodeURIComponent(k);if(o.budget)u+='&rh='+encodeURIComponent('p_36:-'+o.budget*100);if(opt.sort)u+='&s='+opt.sort;if(AFF_TAG)u+='&tag='+encodeURIComponent(AFF_TAG);return u}
+ const d=opt.dom||STORE;let u='https://www.'+d+'/s?k='+encodeURIComponent(k);if(o.budget)u+='&rh='+encodeURIComponent('p_36:-'+o.budget*100);if(opt.sort)u+='&s='+opt.sort;if(tagFor(d))u+='&tag='+encodeURIComponent(tagFor(d));return u}
 function speak(t){if(!ttsOn||!fromVoice||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));u.lang=VL[lang];speechSynthesis.speak(u)}catch(e){}}
 function getItems(){try{let v=JSON.parse(localStorage.getItem('snb-items')||'null');if(!v){const o=JSON.parse(localStorage.getItem('snb-saved')||'[]');v=o.map(q=>({q,t:Date.now(),f:{}}))}return v}catch(e){return []}}
 function setItems(v){try{localStorage.setItem('snb-items',JSON.stringify(v.slice(0,40)))}catch(e){}}
@@ -1130,7 +1151,7 @@ function run(force){const T=L[lang],Y=X[lang];const s=$('#q').value.trim();if(!s
  if(!force){const li=findList(s);if(li)return showList(li,s);const pr=findProblem(s);if(pr)return showProblem(pr,s)}
  const o=parse(s);if(!o.what){$('#hint').textContent=T.empty;return}$('#hint').textContent='';$('#q').blur();tab('home');addRecent(s.replace(/\s*\u200b.*$/,''));o.src=s;o.spec=/\u200b/.test(s);last=o;mode='result';const gd=findGuide(o.what);document.body.classList.remove('home');
  const tags=[`<b class="main">${esc(o.what)}</b>`];if(o.size)tags.push(`<b>${T.size} ${o.size}</b>`);if(o.beat)tags.push(`<b class="beat">${NX[lang].beat} ${o.beat} ${cur()}</b>`);else if(o.budget)tags.push(`<b>${T.max} ${o.budget} ${cur()}</b>`);if(o.gift)tags.push(`<b>${T.gift}</b>`);
- const mk=(lang==='en'?['uk','de','fr','es','it']:['it','de','fr','es']).map(m=>`<a href="${amazonUrl(o,{dom:MK[m][1]})}" target="_blank" rel="noopener sponsored" class="${MK[m][1]===T.dom?'cur':''}">${MK[m][0]} ${m.toUpperCase()}</a>`).join('');
+ const mk=mkList().map(m=>`<a href="${amazonUrl(o,{dom:MK[m][1]})}" target="_blank" rel="noopener sponsored" class="${MK[m][1]===STORE?'cur':''}">${MK[m][0]} ${m.toUpperCase()}</a>`).join('');
  undock();$('#hero').innerHTML=`<div class="result"><div class="got">${T.got}</div><div class="tags">${tags.join('')}</div><a class="cta" href="${amazonUrl(o,o.beat?{sort:'review-rank'}:{})}" target="_blank" rel="noopener sponsored">${T.cta} <span>→</span></a>
  <div class="res"><h3>${NX[lang].refT}</h3><div class="chips hints">${NX[lang].hints.map(h=>`<button class="chip hint-c" type="button">${esc(h)}</button>`).join('')}</div></div>
  ${gd&&!o.spec?`<div class="res guide"><h3>${RT[lang].ask}</h3><p class="gq">${gd[1]}</p><div class="gopts">${gd[2].map((g,i)=>`<button class="opt" type="button" data-g="${i}">${esc(g[0])}</button>`).join('')}</div></div>`:''}
