@@ -396,7 +396,7 @@ const L={
   budget:/(?:até|menos de|máximo|max)?\s*(\d+)\s*(?:€|euros?)(?=\s|$)|€\s*(\d+)/,sizeW:"tamanho",giftW:/\bpresentes?\b/,stop:/\b(euros?|eur|pounds?|quero|procuro|preciso|um|uma|uns|umas|de|do|da|para|o|a|os|as|que|até|menos|máximo|barato|barata)\b/g}
 };
 const $=s=>document.querySelector(s);
-let lang=(()=>{try{const s=localStorage.getItem('snb-lang');if(s&&L[s])return s}catch(e){}const ls=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);for(const x of ls){const n=String(x).slice(0,2).toLowerCase();if(L[n])return n}return 'en'})();
+let lang=(()=>{try{const q=new URLSearchParams(location.search).get('lang');if(q&&L[q])return q}catch(e){}try{const s=localStorage.getItem('snb-lang');if(s&&L[s])return s}catch(e){}const ls=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);for(const x of ls){const n=String(x).slice(0,2).toLowerCase();if(L[n])return n}return 'en'})();
 
 function esc(t){return t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function parse(s){const T=L[lang];let t=' '+s.toLowerCase()+' ',o={};
