@@ -1,0 +1,89 @@
+<!doctype html><meta charset="utf-8">
+<style>
+@font-face{font-family:Exo2;font-weight:900;font-style:italic;src:url(../fonts/fontsource-exo-2/files/exo-2-latin-900-italic.woff2)}
+@font-face{font-family:Sora;font-weight:700;src:url(../fonts/fontsource-sora/files/sora-latin-700-normal.woff2)}
+@font-face{font-family:Sora;font-weight:800;src:url(../fonts/fontsource-sora/files/sora-latin-800-normal.woff2)}
+*{box-sizing:border-box;margin:0}html,body{overflow:hidden;background:#0B0C0A}
+#root{position:absolute;left:0;top:0;overflow:hidden;background:#0B0C0A;color:#fff}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 90px;visibility:hidden}
+.sc.lime{background:#D4FF4A;color:#0B0C0A}.sc.dark{background:#0B0C0A;color:#fff}
+.ln{overflow:hidden;line-height:1.02}.ln>span{display:inline-block;font:italic 900 var(--fs,150px)/1.02 Exo2;letter-spacing:-2px;will-change:transform}
+.ln.s>span{font:800 var(--ss,46px)/1.3 Sora;letter-spacing:0}
+.dark em{font-style:inherit;color:#D4FF4A}.lime em{font-style:inherit;color:#fff;-webkit-text-stroke:4px #0B0C0A}
+.strike{position:relative}.strike::after{content:"";position:absolute;left:-2%;top:52%;height:16px;width:var(--sw,0%);background:#E53935;transform:rotate(-6deg)}
+#phw{position:absolute;z-index:5;visibility:hidden}
+.ph{position:absolute;inset:0;border-radius:9%/4.2%;background:#000;box-shadow:0 0 0 12px #1b1e17,0 0 0 14px #3a3f33,0 60px 140px rgba(0,0,0,.65);overflow:hidden}
+.ph .in{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0}
+.ph img{position:absolute;left:0;top:0;width:100%;opacity:0}
+.laser{position:absolute;height:5px;border-radius:3px;background:#D4FF4A;box-shadow:0 0 16px 5px rgba(212,255,74,.6)}
+.cap{position:absolute;z-index:6;left:70px;right:70px;text-align:center;font:italic 900 86px/1.05 Exo2;letter-spacing:-1px}.cap em{font-style:inherit;color:#D4FF4A}
+.finger{position:absolute;z-index:7;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(255,255,255,.28);border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0}
+.end img{width:300px;border-radius:66px;box-shadow:0 30px 90px rgba(212,255,74,.25)}
+.cta{display:inline-block;margin-top:50px;font:italic 900 64px Exo2;background:#D4FF4A;color:#0B0C0A;border-radius:99px;padding:24px 60px}
+.sc.c{align-items:center;text-align:center}
+.lbl{background:#fff;color:#111;border-radius:18px;width:780px;max-width:86%;box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;text-align:left}
+.lbl .top{background:#E53935;color:#fff;font:800 30px Sora;letter-spacing:.12em;padding:14px 30px}
+.lbl .bd{padding:26px 30px 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.lbl .nm{font:800 40px/1.2 Sora}.lbl .nm small{display:block;font:700 26px Sora;color:#666;margin-top:6px}
+.lbl .pr{font:italic 900 150px/1 Exo2;white-space:nowrap}
+.kick{font:800 34px Sora;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin-bottom:24px}
+.q{font:italic 900 104px/1.05 Exo2;margin-top:60px}
+.cmp2{display:flex;flex-direction:column;gap:30px;width:100%;align-items:center}
+.row{display:flex;justify-content:space-between;align-items:center;width:820px;max-width:90%;border-radius:28px;padding:30px 40px;border:5px solid #0B0C0A}
+.row small{font:800 36px Sora}.row b{font:italic 900 130px/1 Exo2}
+.row.shop{background:#fff}.row.amz{background:#0B0C0A;color:#D4FF4A}
+.row.shop b{position:relative}.row.shop b::after{content:"";position:absolute;left:-4%;top:50%;height:14px;width:var(--sw,0%);background:#E53935;transform:rotate(-7deg)}
+.step{display:inline-block;width:84px;height:84px;border-radius:50%;background:#D4FF4A;color:#0B0C0A;font:italic 900 56px/84px Exo2;text-align:center;margin-right:18px;vertical-align:middle}
+.brand img{width:200px;border-radius:44px;margin-bottom:30px}
+.ln>span.kick{font:800 36px Sora;letter-spacing:.16em}
+.ln>span.q{font:italic 900 110px/1.05 Exo2}
+.lbl{width:820px!important;max-width:none!important}.row{width:860px!important;max-width:none!important}
+.lime em{color:#D4FF4A;background:#0B0C0A;-webkit-text-stroke:0;padding:0 16px;border-radius:10px}
+</style>
+<div id="root">
+ <div class="sc dark" id="s1"></div><div class="sc lime" id="s2"></div><div class="sc dark" id="s3"></div><div class="sc lime" id="s5"></div><div class="sc dark" id="s6"></div><div class="sc dark" id="s8"></div>
+ <div id="phw"><div class="ph"><div class="in" id="pin"><img data-k="scan"><img data-k="scan_dim"><img data-k="found"><img data-k="home_save"><div class="laser" id="laser"></div></div></div></div>
+ <div class="cap" id="cap"></div><div id="boom" style="position:absolute;z-index:8;font:italic 900 230px/1 Exo2;color:#D4FF4A;-webkit-text-stroke:8px #0B0C0A;text-shadow:0 20px 60px rgba(0,0,0,.6);opacity:0;white-space:nowrap">BOOM!</div><div class="finger" id="finger"></div>
+</div>
+<script>
+const P=new URLSearchParams(location.search),LG=P.get('lang')||'it',FMT=P.get('f')||'v';const V=FMT==='v',W=V?1080:1920,H=V?1920:1080;
+const TX={"it": {"a0": "Sei in negozio", "a1": "Hai trovato <em>quello che cercavi.</em>", "l0": "Prezzo", "ln": "AirPods 4", "lq": "Apple", "lp": "149 €", "q": "Ma su Amazon<br>costa <em>meno?</em>", "b0": "Scoprilo in un lampo", "b1": "Boom<em>Flash</em>nBuy", "c1": "Inquadra il <em>codice a barre</em>", "d1": "Tocca: vedi le <em>offerte Amazon</em>", "e0": "In negozio", "e1": "Su Amazon", "p1": "149 €", "p2": "109 €", "f0": "Risparmi", "f1": "40 €", "f2": "e l’app tiene il conto.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Gratis · Funziona dal browser", "cta": "Provala gratis →"}, "en": {"a0": "In a shop", "a1": "Found <em>what you were looking for.</em>", "l0": "Price", "ln": "AirPods 4", "lq": "Apple", "lp": "£129", "q": "But on Amazon,<br>is it <em>cheaper?</em>", "b0": "Find out in a flash", "b1": "Boom<em>Flash</em>nBuy", "c1": "Scan the <em>barcode</em>", "d1": "Tap: see the <em>Amazon offers</em>", "e0": "In the shop", "e1": "On Amazon", "p1": "£129", "p2": "£99", "f0": "You save", "f1": "£30", "f2": "and the app keeps count.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Free · Works in your browser", "cta": "Try it free →"}, "es": {"a0": "Estás en la tienda", "a1": "Has encontrado <em>lo que buscabas.</em>", "l0": "Precio", "ln": "AirPods 4", "lq": "Apple", "lp": "149 €", "q": "Pero en Amazon,<br>¿cuesta <em>menos?</em>", "b0": "Descúbrelo al instante", "b1": "Boom<em>Flash</em>nBuy", "c1": "Escanea el <em>código de barras</em>", "d1": "Toca: mira las <em>ofertas de Amazon</em>", "e0": "En tienda", "e1": "En Amazon", "p1": "149 €", "p2": "109 €", "f0": "Ahorras", "f1": "40 €", "f2": "y la app lleva la cuenta.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Gratis · Funciona en el navegador", "cta": "Pruébala gratis →"}, "fr": {"a0": "Tu es en magasin", "a1": "Tu as trouvé <em>ce que tu cherchais.</em>", "l0": "Prix", "ln": "AirPods 4", "lq": "Apple", "lp": "149 €", "q": "Mais sur Amazon,<br>c’est <em>moins cher ?</em>", "b0": "Découvre-le en un éclair", "b1": "Boom<em>Flash</em>nBuy", "c1": "Scanne le <em>code-barres</em>", "d1": "Touche : vois les <em>offres Amazon</em>", "e0": "En magasin", "e1": "Sur Amazon", "p1": "149 €", "p2": "109 €", "f0": "Tu économises", "f1": "40 €", "f2": "et l’appli tient les comptes.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Gratuite · Marche dans le navigateur", "cta": "Essaie-la gratis →"}, "de": {"a0": "Du bist im Laden", "a1": "Du hast <em>gefunden, was du suchst.</em>", "l0": "Preis", "ln": "AirPods 4", "lq": "Apple", "lp": "149 €", "q": "Aber ist es bei Amazon<br><em>günstiger?</em>", "b0": "Finde es blitzschnell heraus", "b1": "Boom<em>Flash</em>nBuy", "c1": "Scanne den <em>Barcode</em>", "d1": "Tippen: sieh die <em>Amazon-Angebote</em>", "e0": "Im Laden", "e1": "Bei Amazon", "p1": "149 €", "p2": "109 €", "f0": "Du sparst", "f1": "40 €", "f2": "und die App rechnet mit.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Kostenlos · Läuft im Browser", "cta": "Gratis testen →"}, "pt": {"a0": "Estás na loja", "a1": "Encontraste <em>o que procuravas.</em>", "l0": "Preço", "ln": "AirPods 4", "lq": "Apple", "lp": "149 €", "q": "Mas na Amazon,<br>custa <em>menos?</em>", "b0": "Descobre num instante", "b1": "Boom<em>Flash</em>nBuy", "c1": "Digitaliza o <em>código de barras</em>", "d1": "Toca: vê as <em>ofertas da Amazon</em>", "e0": "Na loja", "e1": "Na Amazon", "p1": "149 €", "p2": "109 €", "f0": "Poupas", "f1": "40 €", "f2": "e a app faz as contas.", "h1": "Boom<em>Flash</em>nBuy", "h2": "Grátis · Funciona no browser", "cta": "Experimenta grátis →"}}[LG];
+const $=s=>document.querySelector(s);const root=$('#root');root.style.width=W+'px';root.style.height=H+'px';
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lin=(t,a,b)=>cl((t-a)/(b-a)),es=x=>.5-.5*Math.cos(Math.PI*x),eo=x=>1-Math.pow(1-x,3);
+let META={};const IM={};document.querySelectorAll('#pin img').forEach(i=>{i.src=LG+'/'+i.dataset.k+'.png';IM[i.dataset.k]=i});
+const L=(h,st='')=>`<div class="ln"><span style="${st}">${h}</span></div>`;
+// scenes
+$('#s1').classList.add('c');$('#s1').innerHTML=`<div class="ln"><span class="kick">${TX.a0}</span></div>`+L(TX.a1,'--fs:120px');
+$('#s2').classList.add('c');$('#s2').innerHTML=`<div class="ln"><span><div class="lbl"><div class="top">${TX.l0}</div><div class="bd"><div class="nm">${TX.ln}<small>${TX.lq}</small></div><div class="pr">${TX.lp}</div></div></div></span></div><div class="ln"><span class="q">${TX.q}</span></div>`;
+$('#s3').classList.add('c');$('#s3').innerHTML=`<div class="ln"><span class="kick" style="opacity:.9">${TX.b0}</span></div><div class="ln brand"><span><img src="logo.png"><br><span style="font:italic 900 120px/1 Exo2">${TX.b1}</span></span></div>`;
+$('#s5').classList.add('c');$('#s5').innerHTML=`<div class="cmp2"><div class="ln"><span><div class="row shop"><small>${TX.e0}</small><b id="sp1">${TX.p1}</b></div></span></div><div class="ln"><span><div class="row amz"><small>${TX.e1}</small><b>${TX.p2}</b></div></span></div></div>`;
+$('#s6').classList.add('c');$('#s6').innerHTML=`<div class="ln"><span class="kick">${TX.f0}</span></div><div class="ln"><span id="cnt" style="--fs:280px;color:#D4FF4A">${TX.f1}</span></div>`+L(TX.f2,'--fs:80px');
+$('#s8').classList.add('c');$('#s8').innerHTML=`<div class="end"><img src="logo.png"><div class="ln" style="margin-top:40px"><span style="--fs:110px">${TX.h1}</span></div><div class="ln"><span style="font:800 42px Sora;margin-top:18px;color:#cfd5ca">${TX.h2}</span></div><div><span class="cta" id="cta">${TX.cta}</span></div></div>`;
+const T={ph0:10,found:12.6,tap:17.8,ph1:20.6,end:28.2};
+const S=[['s1',0,3.2],['s2',3.2,7.2],['s3',7.2,10],['s5',20.6,24.6],['s6',24.6,28.2],['s8',28.2,34]];
+const PHW=V?640:430,PHH=PHW*844/390,k=PHW/390;
+function reveal(el,t,t0){el.querySelectorAll(':scope .ln>span, :scope .cmp2 .ln>span').forEach((s,i)=>{const u=eo(lin(t,t0+i*.25,t0+i*.25+.65));s.style.transform=`translateY(${(1-u)*110}%)`})}
+function wipe(el,t,t0){const u=es(lin(t,t0,t0+.55));el.style.clipPath=`inset(${(1-u)*100}% 0 0 0)`}
+function show(op){for(const k in IM)IM[k].style.opacity=op[k]||0}
+function render(t){
+ for(const [id,a,b] of S){const e=$('#'+id);const on=t>=a&&t<b+.6;e.style.visibility=on?'visible':'hidden';if(on){wipe(e,t,a);reveal(e,t,a+.25)}}
+ $('#sp1').style.setProperty('--sw',(108*es(lin(t,22.2,22.8)))+'%');
+ const c=$('#cnt');{const tot=LG==='en'?30:40;const v=Math.round(tot*es(lin(t,25.1,26.4)));c.textContent=TX.f1.replace(/\d+/,v)}
+ const pw=$('#phw'),M=META,cap=$('#cap'),fg=$('#finger');fg.style.opacity=0;
+ const inA=t>=T.ph0&&t<T.ph1+.6;pw.style.visibility=inA?'visible':'hidden';cap.style.opacity=0;
+ const PX=V?(W-PHW)/2:1180,PY=V?560:(H-PHH)/2;Object.assign(pw.style,{left:PX+'px',top:PY+'px',width:PHW+'px',height:PHH+'px'});
+ if(inA){const rise=eo(lin(t,T.ph0+.1,T.ph0+1.1));pw.style.transform=`translateY(${(1-rise)*320}px)`;pw.style.opacity=rise*(1-lin(t,T.ph1,T.ph1+.5));
+  const F=M.frame,FC=[F[0]+F[2]/2,F[1]+F[3]/2],B=[M.btn[0]+M.btn[2]/2,M.btn[1]+M.btn[3]/2];let op={};
+  if(t<T.found){op.scan=1;op.scan_dim=.5-.5*Math.cos(t*Math.PI*2);const Ls=$('#laser');Ls.style.opacity=1;const p=.5-.5*Math.cos(t*Math.PI*2/1.6);Object.assign(Ls.style,{left:(F[0]+10)*k+'px',width:(F[2]-20)*k+'px',top:((F[1]+10)+p*(F[3]-20))*k+'px'})}
+  else{$('#laser').style.opacity=0;const u=es(lin(t,T.found,T.found+.5));op.scan=1-u;op.found=u}
+  show(op);const zA=es(lin(t,10.8,12.2)),zB=es(lin(t,15,16.4));const z=1+.15*zA-.05*zB,fx=FC[0]+(B[0]-FC[0])*zB,fy=FC[1]+(B[1]-FC[1])*zB;
+  $('#pin').style.transform=`translate(${fx*k}px,${fy*k}px) scale(${z}) translate(${-fx*k}px,${-fy*k}px)`;
+  const s1=`<span class="step">1</span>${TX.c1}`,s2=`<span class="step">2</span>${TX.d1}`;
+  cap.innerHTML=t<14.8?s1:s2;cap.style.opacity=t<14.8?Math.min(lin(t,10.4,11),1-lin(t,14.4,14.8)):Math.min(lin(t,14.8,15.4),1-lin(t,20.2,20.6));
+  if(V){Object.assign(cap.style,{top:'170px',left:'60px',right:'60px',textAlign:'center',fontSize:'78px'})}else{Object.assign(cap.style,{top:'40%',left:'110px',right:'auto',width:'900px',textAlign:'left',fontSize:'84px'})}
+  if(t>=T.tap-1.1&&t<T.tap+.8){const bx=PX+B[0]*k,by=PY+B[1]*k;const u=es(lin(t,T.tap-1.1,T.tap-.1));fg.style.opacity=Math.min(lin(t,T.tap-1.1,T.tap-.7),1-lin(t,T.tap+.4,T.tap+.8));fg.style.left=bx+(1-u)*160+'px';fg.style.top=by+(1-u)*120+'px';fg.style.transform=`scale(${Math.abs(t-T.tap)<.12?.85:1})`}}
+ {const b=$('#boom');const a=Math.min(lin(t,T.found,T.found+.35),1-lin(t,13.8,14.3));b.style.opacity=a;const sc=.9+.1*eo(lin(t,T.found,T.found+.5));const cx=V?W/2:1180+PHW/2,cy=V?(560+PHH*.27):H*.33;b.style.left=cx+'px';b.style.top=cy+'px';b.style.transform=`translate(-50%,-50%) rotate(-6deg) scale(${sc})`}
+ $('#cta').style.opacity=lin(t,29.6,30.2);
+}
+window.render=render;window.setMeta=m=>{META=m};window.ready=Promise.all([...[...document.images].map(i=>i.decode().catch(()=>{})),document.fonts.ready]);
+</script>

@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Exo2;font-weight:900;font-style:italic;src:url(../fonts/fontsource-exo-2/files/exo-2-latin-900-italic.woff2)}
+@font-face{font-family:Sora;font-weight:700;src:url(../fonts/fontsource-sora/files/sora-latin-700-normal.woff2)}
+@font-face{font-family:Sora;font-weight:800;src:url(../fonts/fontsource-sora/files/sora-latin-800-normal.woff2)}
+*{box-sizing:border-box;margin:0}html,body{width:100%;height:100%;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center;text-align:center;font-family:Sora}
+.d{background:#0B0C0A;color:#fff}.l{background:#D4FF4A;color:#0B0C0A}
+.kick{font:800 36px Sora;letter-spacing:.16em;text-transform:uppercase;opacity:.75;margin-bottom:28px}
+h1{font:italic 900 var(--fs)/1.04 Exo2;letter-spacing:-1px}
+.d h1 em{font-style:inherit;color:#D4FF4A}.l h1 em{font-style:inherit;background:#0B0C0A;color:#D4FF4A;padding:0 .14em;border-radius:10px}
+.sub{font:700 46px/1.3 Sora;margin-top:26px;opacity:.9}
+.wave{display:flex;gap:14px;align-items:center;justify-content:center;height:170px;margin-bottom:46px}
+.wave i{display:block;width:22px;border-radius:11px;background:#D4FF4A}
+.home{display:grid;grid-template-columns:repeat(4,var(--ic));gap:calc(var(--ic)*.32);justify-content:center;background:#0B0C0A;padding:calc(var(--ic)*.38);border-radius:calc(var(--ic)*.5);margin:0 auto 50px;width:max-content}
+.home b{width:var(--ic);height:var(--ic);border-radius:calc(var(--ic)*.24);background:#2B2F27;display:block}
+.home img{width:var(--ic);height:var(--ic);border-radius:calc(var(--ic)*.24);box-shadow:0 0 0 5px #D4FF4A,0 0 40px rgba(212,255,74,.7)}
+.cta{display:inline-block;margin-top:46px;font:italic 900 60px Exo2;background:#0B0C0A;color:#D4FF4A;border-radius:99px;padding:22px 58px}
+</style></head><body><div id="c"></div><script>
+const P=new URLSearchParams(location.search),LG=P.get('lang')||'it',V=(P.get('f')||'v')==='v',K=P.get('k')||'10';
+const T={it:['Su iPhone','Ehi Siri: <em>boom!</em>','e si apre lo scanner','Su Android','Installala <em>come un’app</em>','sulla schermata Home','Provala gratis →'],
+en:['On iPhone','Hey Siri: <em>boom!</em>','and the scanner opens','On Android','Install it <em>like an app</em>','right on your Home screen','Try it free →'],
+es:['En iPhone','Oye Siri: <em>¡bum!</em>','y se abre el escáner','En Android','Instálala <em>como una app</em>','en tu pantalla de inicio','Pruébala gratis →'],
+fr:['Sur iPhone','Dis Siri : <em>boum&nbsp;!</em>','et le scanner s’ouvre','Sur Android','Installe-la <em>comme une appli</em>','sur ton écran d’accueil','Essaie-la gratis →'],
+de:['Auf dem iPhone','Hey Siri: <em>boom!</em>','und der Scanner öffnet sich','Auf Android','Installiere sie <em>wie eine App</em>','direkt auf dem Homescreen','Gratis testen →'],
+pt:['No iPhone','Siri: <em>bum!</em>','e abre-se o scanner','No Android','Instala-a <em>como uma app</em>','no ecrã principal','Experimenta grátis →']}[LG];
+const c=document.getElementById('c');if(V){T[1]=T[1].replace(/:?\s*<em>/,m=>m.trim().replace('<em>','')+'<br><em>');T[4]=T[4].replace(' <em>','<br><em>')}
+if(K==='10'){document.body.className='d';document.body.style.setProperty('--fs',V?'150px':'140px');
+ const hs=[50,110,170,120,70,140,90,150,60];
+ c.innerHTML=`<div class="wave">${hs.map(h=>`<i style="height:${h}px"></i>`).join('')}</div><div class="kick">${T[0]}</div><h1>${T[1]}</h1><div class="sub">${T[2]}</div>`;}
+else{document.body.className='l';document.body.style.setProperty('--fs',V?(LG==='fr'?'96px':'112px'):'110px');document.body.style.setProperty('--ic',V?'130px':'104px');
+ const g=Array.from({length:8},(_,i)=>i===5?'<img src="logo.png">':'<b></b>').join('');
+ c.innerHTML=`<div class="home">${g}</div><div class="kick">${T[3]}</div><h1>${T[4]}</h1><div class="sub">${T[5]}</div><div class="cta">${T[6]}</div>`;}
+if(V)c.style.padding='0 70px';
+</script></body></html>
