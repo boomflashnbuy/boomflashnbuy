@@ -173,8 +173,25 @@ for key in KEYS + [None]:
         s = s.replace('<main>', '<main>' + langbar(m, 'it'), 1)
     open(p, 'w', encoding='utf-8').write(s)
 
+# meta per Google Immagini/Video/Discover su tutte le pagine
+ROBOTS = '<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">'
+import glob
+for p in [os.path.join(ROOT, 'index.html')] + glob.glob(os.path.join(ROOT, '*', '**', 'index.html'), recursive=True):
+    if '/tools/' in p or '/media/' in p: continue
+    s = open(p, encoding='utf-8').read()
+    if 'max-image-preview' not in s and '<meta name="viewport"' in s:
+        s = s.replace('<meta name="viewport"', ROBOTS + '<meta name="viewport"', 1); open(p, 'w', encoding='utf-8').write(s)
+
 # sitemap: aggiungi le nuove pagine
 sp = os.path.join(ROOT, 'sitemap.xml'); sm = open(sp, encoding='utf-8').read()
-add = ''.join(f'<url><loc>{BASE}{u}</loc><lastmod>{TODAY}</lastmod></url>\n' for u in new_urls if f'{BASE}{u}<' not in sm)
+def vt(u):
+    for lg in T:
+        for k in KEYS:
+            if T[lg]['slug'][k] == u:
+                t, d = T[lg]['pages'][k][0], T[lg]['pages'][k][1]
+                return (f'<video:video><video:thumbnail_loc>{BASE}{S.POSTER}</video:thumbnail_loc><video:title>{html.escape(t)}</video:title>'
+                        f'<video:description>{html.escape(d)}</video:description><video:content_loc>{BASE}/media/BoomFlashnBuy-{lg}-orizzontale.mp4</video:content_loc><video:duration>64</video:duration></video:video>')
+    return ''
+add = ''.join(f'<url><loc>{BASE}{u}</loc><lastmod>{TODAY}</lastmod>{vt(u)}</url>\n' for u in new_urls if f'{BASE}{u}<' not in sm)
 sm = sm.replace('</urlset>', add + '</urlset>'); open(sp, 'w', encoding='utf-8').write(sm)
 print('pagine nuove:', len(new_urls))
