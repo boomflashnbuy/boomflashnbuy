@@ -303,7 +303,7 @@ body.home .brand .sub{background:linear-gradient(100deg,var(--soft) 0 40%,#fff 4
 .savec{display:flex;align-items:center;gap:12px;width:100%;background:linear-gradient(135deg,#1c2113,#12140e);border:1.5px solid var(--lime);border-radius:20px;padding:12px 14px;text-align:left}
 .savec .sv-i{font-size:28px}.savec div{flex:1}.savec small{display:block;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
 .savec b{display:block;font:italic 900 30px/1 var(--display);color:var(--lime);margin:2px 0}.savec span{font:600 12px/1.35 var(--body);color:var(--soft)}
-.sv-sh{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--lime);background:none;color:var(--lime);display:grid;place-items:center;cursor:pointer}.sv-sh svg{width:20px;height:20px}
+.sv-sh{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--lime);background:none;color:var(--lime);display:grid;place-items:center;cursor:pointer}.sv-sh svg{width:20px;height:20px}.bm-anon{margin:6px 2px 0;font:500 11.5px/1.35 var(--body);color:var(--soft);opacity:.85}
 .ok.ghost{background:none;color:var(--soft);border:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.boomv,.boomv.closing{transition:none}.bm-laser,.bm-btn.found{animation:none}}
 .vf.mini .sx{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;cursor:pointer}
@@ -1034,6 +1034,33 @@ function guessDep(t){t=' '+(t||'')+' ';for(const [d,re] of DEPS)if(re.test(t))re
 const _amzUrl=amazonUrl;
 amazonUrl=function(o,opt={}){let u=_amzUrl(o,opt);const dep=opt.dep!==undefined?opt.dep:guessDep(o.what);if(dep&&!/[?&]i=/.test(u))u+='&i='+dep;return u};
 
+
+/* --- prezzi dei negozi segnalati in forma anonima (Google Modulo) --- */
+const PR_URL='https://docs.google.com/forms/d/e/1FAIpQLScY5ST-AVVv_yNnJZW49la08P7w-gyEAYUZOi-PItpxzxjuWQ/formResponse',PR_FIELD='entry.1261160381';
+const PRN={it:'🔒 Il prezzo viene condiviso in forma anonima per creare le pagine prezzi dei negozi.',en:'🔒 The price is shared anonymously to build store-price pages.',es:'🔒 El precio se comparte de forma anónima para crear páginas de precios de tiendas.',fr:'🔒 Le prix est partagé anonymement pour créer des pages de prix en magasin.',de:'🔒 Der Preis wird anonym geteilt, um Ladenpreis-Seiten zu erstellen.',pt:'🔒 O preço é partilhado de forma anónima para criar páginas de preços das lojas.'};
+function reportPrice(o){try{if(!(o.p>0&&o.p<20000)||!o.n)return;const key='snb-pr-'+(o.e||o.n)+'-'+o.p;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');
+ const d={v:1,e:o.e||'',n:String(o.n).slice(0,120),p:Math.round(o.p*100)/100,c:cur(),s:STORE,l:lang,d:new Date().toISOString().slice(0,10)};
+ const f=new FormData();f.append(PR_FIELD,JSON.stringify(d));fetch(PR_URL,{method:'POST',mode:'no-cors',body:f,keepalive:true}).catch(()=>{})}catch(e){}}
+/* --- cartolina del risparmio: immagine per storie e WhatsApp --- */
+const CD={it:{s:'Ho risparmiato',on:'su',st:'Negozio',az:'Amazon',tot:'In tutto ho risparmiato',cta:'Scansiona il codice a barre e confronta. Gratis.'},en:{s:'I saved',on:'on',st:'Store',az:'Amazon',tot:'In total I saved',cta:'Scan the barcode and compare. Free.'},es:{s:'He ahorrado',on:'en',st:'Tienda',az:'Amazon',tot:'En total he ahorrado',cta:'Escanea el código de barras y compara. Gratis.'},fr:{s:'J’ai économisé',on:'sur',st:'Magasin',az:'Amazon',tot:'Au total j’ai économisé',cta:'Scanne le code-barres et compare. Gratuit.'},de:{s:'Ich habe gespart',on:'bei',st:'Laden',az:'Amazon',tot:'Insgesamt gespart',cta:'Barcode scannen und vergleichen. Kostenlos.'},pt:{s:'Poupei',on:'em',st:'Loja',az:'Amazon',tot:'No total poupei',cta:'Lê o código de barras e compara. Grátis.'}};
+function cardImg(){return new Promise(res=>{const C=CD[lang]||CD.en,S=getSave().filter(x=>x.store>x.amz),last=S[S.length-1],T=saveTot();
+ const cv=document.createElement('canvas');cv.width=1080;cv.height=1920;const g=cv.getContext('2d');
+ const bg=g.createLinearGradient(0,0,0,1920);bg.addColorStop(0,'#0B0C0A');bg.addColorStop(1,'#1a1f12');g.fillStyle=bg;g.fillRect(0,0,1080,1920);
+ g.strokeStyle='#D4FF4A';g.lineWidth=6;g.strokeRect(48,48,984,1824);
+ const F=(w,sz)=>`italic ${w} ${sz}px "Exo 2",system-ui,sans-serif`,center=(t,y,sz,col,w)=>{g.font=F(w||900,sz);g.fillStyle=col;g.textAlign='center';let s=sz;while(g.measureText(t).width>920&&s>28){s-=4;g.font=F(w||900,s)}g.fillText(t,540,y)};
+ const im=new Image();im.onload=()=>{g.drawImage(im,390,170,300,300);draw()};im.onerror=draw;im.src=LOGO;
+ function draw(){center('BOOM!',600,150,'#D4FF4A');
+  if(last){center(C.s,760,64,'#ffffff',800);center(money(last.store-last.amz),930,170,'#D4FF4A');center(C.on+' '+String(last.n).slice(0,40),1040,54,'#ffffff',700);
+   center(`${C.st} ${money(last.store)}  →  ${C.az} ${money(last.amz)}`,1150,48,'#c9cfc2',600)}
+  if(T.eur>0&&(!last||S.length>1)){center(C.tot+' '+money(T.eur),last?1290:900,52,'#ffffff',700)}
+  center(C.cta,1560,46,'#ffffff',700);center('boomflashnbuy.netlify.app',1660,58,'#D4FF4A');
+  cv.toBlob(b=>res(b),'image/png')}})}
+async function shareCard(){const V=SV[lang]||SV.en,T=saveTot(),url=appUrl(),txt=`${V.tot} ${money(T.eur)} ${V.vs} 💰 BoomFlashnBuy ${url}`;
+ try{const b=await cardImg();const f=b&&new File([b],'boomflashnbuy.png',{type:'image/png'});
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:txt});return}
+  if(f){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download='boomflashnbuy.png';document.body.appendChild(a);a.click();a.remove()}
+ }catch(e){if(e&&e.name==='AbortError')return}
+ if(navigator.share)navigator.share({title:'BoomFlashnBuy',text:txt,url}).catch(()=>{});else copyLink(IG[lang][7])}
 /* --- risparmi negozio vs Amazon --- */
 function getSave(){try{return JSON.parse(localStorage.getItem('snb-save')||'[]')}catch(e){return []}}
 function setSave(v){try{localStorage.setItem('snb-save',JSON.stringify(v.slice(-500)))}catch(e){}}
@@ -1041,7 +1068,7 @@ function saveTot(){const s=getSave();return {eur:s.reduce((q,x)=>q+Math.max(0,x.
 function hrsStr(min){const V=SV[lang]||SV.en;return min<60?min+' '+V.m:(Math.round(min/6)/10).toLocaleString(lang)+' '+V.h}
 function saveCard(){const T=saveTot();if(!T.n)return '';const V=SV[lang]||SV.en;
  return `<div class="savec"><span class="sv-i">💰</span><div><small>${V.tot}</small><b>${money(T.eur)}</b><span>${V.vs} · ${V.hrs} ${hrsStr(T.min)} ${V.hrs2}</span></div><button type="button" class="sv-sh" aria-label="${V.share}">${FWD}</button></div>`}
-function bindSaveCard(root){const b=root&&root.querySelector('.sv-sh');if(!b)return;b.onclick=()=>{const V=SV[lang]||SV.en,T=saveTot();const t=`${V.tot} ${money(T.eur)} ${V.vs} 💰 BoomFlashnBuy`;if(navigator.share)navigator.share({title:"BoomFlashnBuy",text:t,url:appUrl()}).catch(()=>{});else copyLink(IG[lang][7])}}
+function bindSaveCard(root){const b=root&&root.querySelector('.sv-sh');if(!b)return;b.onclick=()=>shareCard()}
 function askSave(p){const V=SV[lang]||SV.en,P=SP[lang];const sh=document.createElement('div');sh.className='sheet';
  sh.innerHTML=`<div class="card"><h2>🛒 ${V.q}</h2><p class="note">${esc(p.n)}<br>${V.sub}</p>
   <label class="pq">${V.paid}<span><input id="svp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label>
@@ -1082,14 +1109,14 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   <button class="bm-btn" type="button" id="bmbtn"><span class="bm-ic">✕</span><span class="bm-tx">${K.close}</span></button>
   <button type="button" class="bm-app" id="bmapp"><img class="bm-ai" src="${LOGO}" alt="">${K.app} <i>→</i></button>`;
  document.body.appendChild(o);sndPaint();requestAnimationFrame(()=>o.classList.add('on'));
- let st='scan',q='',dep='',name='';
+ let st='scan',q='',dep='',name='',ean='';
  const btn=$('#bmbtn'),card=$('#bmcard'),msg=$('#bmmsg'),v=o.querySelector('video');
  const toFound=()=>{st='found';o.classList.add('hit');const w0=$('#bmw0');if(w0){w0.textContent='BOOM!';w0.classList.remove('q');w0.classList.add('lit')}$('#bmgo').hidden=false;btn.classList.add('found');btn.querySelector('.bm-ic').textContent='✓';btn.querySelector('.bm-tx').textContent=K.found+' →';$('#bmocr').hidden=true};
  const showCard=(title,sub,extra)=>{card.hidden=false;card.innerHTML=`<small>${sub}</small><b>${esc(title)}</b>${extra||''}
-   <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label>
+   <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label><p class="bm-anon">${PRN[lang]||PRN.en}</p>
    <button type="button" class="bm-again" id="bmag">📷 ${K.again}</button>`;$('#bmag').onclick=boomOpen};
  const onCode=code=>{beep();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}toFound();msg.textContent='';
-  const isNum=/^\d{6,14}$/.test(code);q=isNum?code:code.slice(0,80);name=q;addRecent(q);
+  const isNum=/^\d{6,14}$/.test(code);q=isNum?code:code.slice(0,80);name=q;ean=isNum?code:'';addRecent(q);
   showCard(isNum?code:q,K.read,`<p class="bm-wait" id="bmw">⏳ ${K.look}</p>`);
   if(!isNum){dep=guessDep(q);return}
   lookupCode(code).then(info=>{const w=$('#bmw');if(!$('#boomv'))return;
@@ -1106,7 +1133,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   catch(e){b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}};
  btn.onclick=()=>{if(st==='scan'){boomClose();return}
   const sp=parseFloat((($('#bmsp')||{}).value||'').replace(',','.'));const url=amazonUrl({what:q},{dep:dep});
-  if(sp>0){try{localStorage.setItem('snb-pend',JSON.stringify({t:Date.now(),n:name||q,store:sp}))}catch(e){}}
+  if(sp>0){try{localStorage.setItem('snb-pend',JSON.stringify({t:Date.now(),n:name||q,store:sp,e:ean}))}catch(e){}reportPrice({e:ean,n:name||q,p:sp})}
   kaching();if(isPhone()&&!installed()){goAmazon(url);return}const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener sponsored';document.body.appendChild(a);a.click();a.remove()}}
 
 const DIL={it:'Dillo, cerco io',en:'Say it, I’ll find it',es:'Dilo, yo lo busco',fr:'Dis-le, je cherche',de:'Sag es, ich suche',pt:'Diz, eu procuro'};
