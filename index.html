@@ -364,7 +364,7 @@ body.home .brand .sub{background:linear-gradient(100deg,var(--soft) 0 40%,#fff 4
 #toast2.on{opacity:1;transform:translate(-50%,0)}
 .dlb,.shb{position:relative;z-index:12;touch-action:manipulation;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*:not(.dlb){animation:none!important}}
-.nfask{font-weight:800;font-size:17px;margin:10px 0 6px}.nfhint{display:block;color:#b9c2b2;margin:-2px 0 6px}.nfrow{display:flex;gap:8px;align-items:center}.nfrow .lqi{flex:1;margin:0}.nfmic{flex:0 0 48px;height:48px;border-radius:14px;border:1.5px solid #D4FF4A;background:#171914;font-size:22px;cursor:pointer}.nfmic.on{background:#D4FF4A;animation:pulse 1s infinite}@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}.shake{animation:shk .35s;border-color:#ff5a5a!important}</style>
+.bm-fix{background:none;border:0;color:#D4FF4A;font-weight:700;font-size:14px;padding:6px 0;margin:2px 0 4px;cursor:pointer;text-align:left}.nfask{font-weight:800;font-size:17px;margin:10px 0 6px}.nfhint{display:block;color:#b9c2b2;margin:-2px 0 6px}.nfrow{display:flex;gap:8px;align-items:center}.nfrow .lqi{flex:1;margin:0}.nfmic{flex:0 0 48px;height:48px;border-radius:14px;border:1.5px solid #D4FF4A;background:#171914;font-size:22px;cursor:pointer}.nfmic.on{background:#D4FF4A;animation:pulse 1s infinite}@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}.shake{animation:shk .35s;border-color:#ff5a5a!important}</style>
 
 <main class="app">
   <div class="top"><button class="snd" type="button" id="snd"></button><button class="dlb" type="button" id="dlb" hidden></button><button class="shb" type="button" id="shb" hidden></button><button class="tbtn" type="button" id="hfb" aria-pressed="false"></button><button class="tbtn mytop" type="button" id="myt" hidden></button><button class="lang lbtn" type="button" id="lb"></button><select class="sr" id="lang" aria-label="Lingua" tabindex="-1"></select></div>
@@ -826,6 +826,9 @@ function dictate(input,btn){const R=window.SpeechRecognition||window.webkitSpeec
  try{const r=new R();r.lang={it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-PT'}[lang]||'it-IT';r.interimResults=false;r.maxAlternatives=1;btn&&btn.classList.add('on');
   r.onresult=e=>{const t=e.results[0][0].transcript;input.value=(input.value&&!/\s$/.test(input.value)?input.value+' ':input.value)+t;input.dispatchEvent(new Event('input'))};
   r.onend=()=>{btn&&btn.classList.remove('on')};r.onerror=()=>{btn&&btn.classList.remove('on');input.focus()};r.start()}catch(e){input.focus()}}
+const FIXT={"it": "✏️ Non è proprio lui? Correggi la ricerca", "en": "✏️ Not quite it? Fix the search", "es": "✏️ ¿No es exactamente? Corrige la búsqueda", "fr": "✏️ Pas tout à fait ça ? Corrige la recherche", "de": "✏️ Nicht ganz? Suche korrigieren", "pt": "✏️ Não é bem isso? Corrige a pesquisa"};
+function fixBtn(){return `<button type="button" class="bm-fix" id="bmfix">${FIXT[lang]||FIXT.en}</button>`}
+function bindFix(getQ,setQ){setTimeout(()=>{const b=$('#bmfix');if(!b)return;b.onclick=()=>{const N=NF[lang]||NF.en;b.outerHTML=`<div class="nfrow"><input class="lqi" id="nfq" value="${esc(getQ())}" placeholder="${N.ph}" autocomplete="off" enterkeyhint="search"><button type="button" class="nfmic" id="nfmic" aria-label="${N.mic}">🎙️</button></div>`;const i=$('#nfq'),m=$('#nfmic');i.oninput=()=>setQ(enrichQ(i.value)||getQ());m.onclick=()=>{i.value='';dictate(i,m)};i.focus()}},30)}
 /* box "cos'è?" quando le banche dati non conoscono il codice */
 function askBox(code,onQ){const N=NF[lang]||NF.en;const br=gs1Brand(code);
  const h=`<p class="nfask">🤔 ${N.ask}</p>${br?`<small class="nfhint">${N.hint}: <b>${esc(br)}</b></small>`:''}
@@ -907,8 +910,11 @@ function pickStore(){try{const s=localStorage.getItem('snb-store');if(s&&CUR[s])
 let STORE=pickStore();
 const tagFor=d=>d==='amazon.it'?AFF_TAG:'';
 const cur=()=>CUR[STORE]||(lang==='en'?'£':'€');
+/* filtro marca di Amazon: se la ricerca contiene una marca nota, Amazon mostra solo quella marca (niente scarpe di altri marchi) */
+const AMZ_BRANDS=['Nike','adidas','Puma','New Balance','Asics','Converse','Vans','Skechers','Reebok','Crocs','Geox','Superga','Lacoste','Timberland','Apple','Samsung','Xiaomi','Sony','JBL','Bose','Garmin','Logitech','Philips','Bosch','Dyson','Braun','Tefal',"De'Longhi",'LEGO','Nivea','Barilla','Lavazza','Ferrero','Nutella','Coca-Cola'];
+function amzBrand(k){k=(k||'').replace(/’/g,"'");let best='';for(const b of AMZ_BRANDS){const re=new RegExp('(^|[^\\p{L}])'+b.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^\\p{L}]|$)','iu');if(re.test(k)&&b.length>best.length)best=b}return best}
 function amazonUrl(o,opt={}){const T=L[lang];const k=[o.what,o.size?T.size+' '+o.size:'',o.gift&&!o.what.includes(T.gift.toLowerCase())?T.gift:''].filter(Boolean).join(' ');
- const d=opt.dom||STORE;let u='https://www.'+d+'/s?k='+encodeURIComponent(k);if(o.budget)u+='&rh='+encodeURIComponent('p_36:-'+o.budget*100);if(opt.sort)u+='&s='+opt.sort;if(tagFor(d))u+='&tag='+encodeURIComponent(tagFor(d));return u}
+ const d=opt.dom||STORE;let u='https://www.'+d+'/s?k='+encodeURIComponent(k);const rh=[];const br=opt.nobrand?'':amzBrand(k);if(br)rh.push('p_89:'+br);if(o.budget)rh.push('p_36:-'+o.budget*100);if(rh.length)u+='&rh='+encodeURIComponent(rh.join(','));if(opt.sort)u+='&s='+opt.sort;if(tagFor(d))u+='&tag='+encodeURIComponent(tagFor(d));return u}
 function speak(t){if(!ttsOn||!fromVoice||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,''));u.lang=VL[lang];speechSynthesis.speak(u)}catch(e){}}
 function getItems(){try{let v=JSON.parse(localStorage.getItem('snb-items')||'null');if(!v){const o=JSON.parse(localStorage.getItem('snb-saved')||'[]');v=o.map(q=>({q,t:Date.now(),f:{}}))}return v}catch(e){return []}}
 function setItems(v){try{localStorage.setItem('snb-items',JSON.stringify(v.slice(0,40)))}catch(e){}}
@@ -1165,7 +1171,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   showCard(isNum?code:q,K.read,`<p class="bm-wait" id="bmw">⏳ ${K.look}</p>`);
   if(!isNum){dep=guessDep(q);return}
   lookupCode(code).then(info=>{const w=$('#bmw');if(!$('#boomv'))return;
-   if(info){q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code);if(sp)$('#bmsp').value=sp}
+   if(info){q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code,fixBtn());if(sp)$('#bmsp').value=sp;bindFix(()=>q,v=>{q=v;name=v})}
    else{nf=true;q='';if(w)w.outerHTML=askBox(code,v=>{q=v;name=v;dep=guessDep(v)});const bt=btn.querySelector('.bm-tx');if(bt)bt.textContent=PLK[lang][3]+' →'}})};
  const onFail=()=>{msg.textContent=K.camNo;o.querySelector('.bm-cam').classList.add('off');$('#bmocr').hidden=true};
  boomCam=camStart(v,onCode,onFail,{onReady:api=>{const cp=api.caps();
