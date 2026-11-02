@@ -818,7 +818,7 @@ function styleBrand(s){const t=(s||'').toUpperCase().trim();
 function enrichQ(q){q=(q||'').trim();const b=styleBrand(q);if(b&&!q.toLowerCase().includes(b.toLowerCase()))q=b+' '+q;return q}
 function cleanBrand(b){return (b||'').replace(/\b(services?|s\.?\s?a\.?(\/n\.?v\.?)?|n\.?v\.?|s\.?p\.?a\.?|s\.?r\.?l\.?|gmbh|ltd|inc\.?|co\.?|company|group|italia|europe|international)\b/gi,'').replace(/\s{2,}/g,' ').replace(/[\s,\/.-]+$/,'').trim()}
 /* nomi insegnati dall'utente: restano sul telefono, così il codice la volta dopo è riconosciuto */
-function teachCode(code,q){if(!code||!q||q===code)return;try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r:{name:q,brand:'',q:q,taught:1}};localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}}
+function teachCode(code,q){if(!code||!q||q===code)return;try{fetch('/api/names?code='+code,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:q}),keepalive:true}).catch(()=>{})}catch(e){}try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r:{name:q,brand:'',q:q,taught:1}};localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}}
 /* dettatura con il microfono del telefono */
 function dictate(input,btn){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){input.focus();return}
  try{const r=new R();r.lang={it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-PT'}[lang]||'it-IT';r.interimResults=false;r.maxAlternatives=1;btn&&btn.classList.add('on');
@@ -836,9 +836,11 @@ async function lookupWikidata(code){const alt=code.length===12?'0'+code:code;con
 
 async function lookupCode(code){try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');if(c[code]&&c[code].t>Date.now()-30*864e5)return c[code].r}catch(e){}
  const r=await lookupCode0(code);if(r)try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r};const ks=Object.keys(c);if(ks.length>200)delete c[ks[0]];localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}return r}
+/* UPC-E (8 cifre, prodotti USA piccoli) -> UPC-A (12 cifre) */
+function upcE2A(e){const d=e.split('');const l=+d[6];let m,p;if(l<=2){m=d[1]+d[2]+d[6]+'00';p='00'+d[3]+d[4]+d[5]}else if(l===3){m=d[1]+d[2]+d[3]+'00';p='000'+d[4]+d[5]}else if(l===4){m=d[1]+d[2]+d[3]+d[4]+'0';p='0000'+d[5]}else{m=d[1]+d[2]+d[3]+d[4]+d[5];p='0000'+d[6]}return d[0]+m+p+d[7]}
 async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.ok)throw r.status;return r.json()};const tries=[];
  /* varianti dello stesso codice: UPC-A (12 cifre) e EAN-13 con lo 0 davanti sono lo stesso prodotto */
- const alt=code.length===12?'0'+code:(code.length===13&&code[0]==='0'?code.slice(1):'');
+ const alt=code.length===12?'0'+code:(code.length===13&&code[0]==='0'?code.slice(1):(code.length===8&&/^[01]/.test(code)?upcE2A(code):''));
  if(/^97[89]/.test(code)){
   tries.push(async()=>{const j=await J('https://openlibrary.org/api/books?bibkeys=ISBN:'+code+'&format=json&jscmd=data');const v=j['ISBN:'+code];if(!v||!v.title)return null;const au=(v.authors||[]).map(x=>x.name);return {dep:'stripbooks',name:v.title,brand:au.join(', '),img:v.cover&&(v.cover.medium||v.cover.small),q:v.title+' '+(au[0]||'')}});
   tries.push(async()=>{const j=await J('https://www.googleapis.com/books/v1/volumes?q=isbn:'+code);const v=j.items&&j.items[0]&&j.items[0].volumeInfo;if(!v)return null;return {name:v.title,brand:(v.authors||[]).join(', '),img:v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail),q:v.title+' '+((v.authors||[])[0]||'')}})}
@@ -849,7 +851,9 @@ async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.
  tries.push(()=>lookupWikidata(code));
  // tutte le banche dati in parallelo: vince la prima che risponde con un nome
  const wrap=t=>withTimeout(t(),8000).then(r=>{if(r&&r.name)return r;throw 0});
- try{const r=await Promise.any(tries.map(wrap));r.q=r.q.split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return null}}
+ try{const r=await Promise.any(tries.map(wrap));r.q=r.q.split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return await sharedName(code)}}
+/* memoria condivisa: nomi insegnati dagli utenti (anonimi) */
+async function sharedName(code){try{if(!/^https?:/.test(location.protocol))return null;const r=await withTimeout(fetch('/api/names?code='+code),4000);if(!r.ok)return null;const j=await r.json();if(!j.name)return null;return {name:j.name,brand:'',q:j.name,shared:1}}catch(e){return null}}
 
 function scanResult(code){const b=$('#sbx'),S=SCN[lang],P=PLK[lang];if(!b)return;b.className='sbx done';addRecent(code);
  b.innerHTML=`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div><p class="sdesc" id="plk">⏳ ${P[0]}</p>`;
