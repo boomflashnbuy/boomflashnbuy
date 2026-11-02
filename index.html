@@ -364,7 +364,7 @@ body.home .brand .sub{background:linear-gradient(100deg,var(--soft) 0 40%,#fff 4
 #toast2.on{opacity:1;transform:translate(-50%,0)}
 .dlb,.shb{position:relative;z-index:12;touch-action:manipulation;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*:not(.dlb){animation:none!important}}
-</style>
+.nfask{font-weight:800;font-size:17px;margin:10px 0 6px}.nfhint{display:block;color:#b9c2b2;margin:-2px 0 6px}.nfrow{display:flex;gap:8px;align-items:center}.nfrow .lqi{flex:1;margin:0}.nfmic{flex:0 0 48px;height:48px;border-radius:14px;border:1.5px solid #D4FF4A;background:#171914;font-size:22px;cursor:pointer}.nfmic.on{background:#D4FF4A;animation:pulse 1s infinite}@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}.shake{animation:shk .35s;border-color:#ff5a5a!important}</style>
 
 <main class="app">
   <div class="top"><button class="snd" type="button" id="snd"></button><button class="dlb" type="button" id="dlb" hidden></button><button class="shb" type="button" id="shb" hidden></button><button class="tbtn" type="button" id="hfb" aria-pressed="false"></button><button class="tbtn mytop" type="button" id="myt" hidden></button><button class="lang lbtn" type="button" id="lb"></button><select class="sr" id="lang" aria-label="Lingua" tabindex="-1"></select></div>
@@ -765,7 +765,8 @@ function labelQuery(data){const lines=((data&&data.lines)||[]).map(l=>({t:(l.tex
   core=(brand.replace(/\b\p{L}/gu,c=>c.toUpperCase())+' '+after).trim();
   if(!after){const i=lines.indexOf(ln);const nx=lines.slice(i+1).find(l=>!/\b(eu|uk|us|size|taglia|tg|cl|ml|vol)\b/i.test(l.t)&&/\p{L}{3,}/u.test(l.t));if(nx)core+=' '+nx.t.split(' ').slice(0,4).join(' ')}}
  else{const big=[...lines].sort((a,b)=>b.h-a.h).slice(0,2).sort((a,b)=>lines.indexOf(a)-lines.indexOf(b));core=big.map(l=>l.t).join(' ').split(' ').filter(w=>w.length>1).slice(0,6).join(' ')}
- const q=[core,vol&&!core.includes(vol)?vol:'',size&&!core.includes(size)?size:''].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+ let q=[core,vol&&!core.includes(vol)?vol:'',size&&!core.includes(size)?size:''].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+ const sc=(all.toUpperCase().match(/\b[A-Z]{2}\d{4}-\d{3}\b|\bM[A-Z0-9]{3,4}\d?[A-Z]{1,2}\/A\b/)||[])[0];if(sc&&!q.toUpperCase().includes(sc))q=(q+' '+sc).trim();q=enrichQ(q);
  return {q,brand,raw:lines.map(l=>l.t).join(' / ')}}
 async function readLabel(canvas){const W=await ocrWorker();const r=await W.recognize(prepOCR(canvas),{},{blocks:true,text:true});
  const d=r.data;let lines=d.lines;if(!lines){lines=[];(d.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>lines.push(l))))}
@@ -788,7 +789,7 @@ function scanOpen(){const b=$('#sbx'),S=SCN[lang],N=NX[lang],K=SC2[lang]||SC2.en
   try{const r=await withTimeout(readLabel(c),25000);if(r&&r.q&&r.q.length>2){cam.stop();scanLabel(r)}else{if(m)m.textContent=K.ocrNo;o.disabled=false;o.querySelector('b').textContent=K.ocr}}
   catch(e){if(m)m.textContent=K.ocrNo;o.disabled=false;o.querySelector('b').textContent=K.ocr}};
  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mcode').value.trim();const c=raw.replace(/\s/g,'');if(/^\d{8,14}$/.test(c)){scanStop&&scanStop();scanResult(c)}else if(raw.length>2){scanStop&&scanStop();scanLabel({q:raw,raw:''})}}}
-function scanLabel(r){const b=$('#sbx'),S=SCN[lang],P=PLK[lang],K=SC2[lang]||SC2.en;if(!b)return;b.className='sbx done';addRecent(r.q);
+function scanLabel(r){r=Object.assign({},r,{q:enrichQ(r.q)});const b=$('#sbx'),S=SCN[lang],P=PLK[lang],K=SC2[lang]||SC2.en;if(!b)return;b.className='sbx done';addRecent(r.q);
  b.innerHTML=`<div class="sres"><span class="ok2">🔤</span><div><small>${K.found}</small><b style="font-size:16px">${K.edit}</b></div></div>
   <input class="lqi" id="lq" value="${esc(r.q)}" autocomplete="off">
   <label class="pq">${P[1]}<span><input id="sp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label>
@@ -796,6 +797,42 @@ function scanLabel(r){const b=$('#sbx'),S=SCN[lang],P=PLK[lang],K=SC2[lang]||SC2
   <div class="row"><button class="opt" type="button" id="sag">📷 ${S[4]}</button></div>`;
  const upd=()=>{const q=($('#lq').value||'').trim()||r.q;const v=parseFloat(($('#sp').value||'').replace(',','.'));const price=v>0?v:0;const o=Object.assign({what:q},price?{budget:Math.max(1,Math.ceil(price)-1)}:{});$('#scta').href=amazonUrl(o,price?{sort:'price-asc-rank'}:{});$('#sctat').textContent=price?`${P[2]} ${money(price)}`:P[3]};
  $('#lq').oninput=upd;$('#sp').oninput=upd;upd();$('#sag').onclick=scanOpen}
+
+/* ===== Scanner v3: mai pagine vuote, marca dal prefisso GS1, codici modello, memoria dei nomi ===== */
+const NF={it:{ask:'Non lo conosco ancora: cos’è?',ph:'Es. Nivea crema 150 ml',mic:'Detta',hint:'Marca probabile',teach:'Lo ricordo per la prossima volta',codeS:'Cerca solo con il codice'},
+en:{ask:'I don’t know this one yet: what is it?',ph:'E.g. Nivea creme 150 ml',mic:'Speak',hint:'Likely brand',teach:'I’ll remember it next time',codeS:'Search by barcode only'},
+es:{ask:'Aún no lo conozco: ¿qué es?',ph:'Ej. Nivea crema 150 ml',mic:'Dictar',hint:'Marca probable',teach:'Lo recordaré la próxima vez',codeS:'Buscar solo con el código'},
+fr:{ask:'Je ne le connais pas encore : c’est quoi ?',ph:'Ex. Nivea crème 150 ml',mic:'Dicter',hint:'Marque probable',teach:'Je m’en souviendrai',codeS:'Chercher avec le code seul'},
+de:{ask:'Kenne ich noch nicht: was ist es?',ph:'Z. B. Nivea Creme 150 ml',mic:'Sprechen',hint:'Wahrscheinliche Marke',teach:'Merke ich mir fürs nächste Mal',codeS:'Nur mit dem Code suchen'},
+pt:{ask:'Ainda não conheço: o que é?',ph:'Ex. Nivea creme 150 ml',mic:'Ditar',hint:'Marca provável',teach:'Lembro-me para a próxima',codeS:'Procurar só com o código'}};
+/* prefissi aziendali GS1 noti (EAN-13, 7 cifre) -> marca */
+const GS1={'5449000':'Coca-Cola','8000500':'Ferrero','3017620':'Ferrero','8076800':'Barilla','8076802':'Barilla','8076808':'Barilla','8076809':'Barilla','4005900':'Nivea','4005808':'Nivea','3600523':'L’Oréal','3600531':'L’Oréal','3600541':'L’Oréal','3600542':'Garnier','7622210':'Mondelez','7622300':'Mondelez','8710103':'Philips','8806085':'Samsung','8806086':'Samsung','8806088':'Samsung','8806090':'Samsung','8806092':'Samsung','8806094':'Samsung','8806095':'Samsung','0190198':'Apple','0190199':'Apple','0194252':'Apple','0194253':'Apple','0195949':'Apple','0885909':'Apple','0888462':'Apple','5702015':'LEGO','5702016':'LEGO','5702017':'LEGO','5025155':'Dyson','4548736':'Sony','4905524':'Sony','4242002':'Bosch','4242005':'Bosch','8004399':'De’Longhi','8000070':'Lavazza','7702018':'Gillette','4210201':'Braun','3121040':'Tefal','4006508':'Tchibo'};
+function gs1Brand(code){if(!/^\d{12,13}$/.test(code))return '';const e=code.length===12?'0'+code:code;return GS1[e.slice(0,7)]||''}
+/* codici modello (scatole/linguette/etichette) -> marca davanti, così Amazon trova il modello giusto */
+function styleBrand(s){const t=(s||'').toUpperCase().trim();
+ if(/\b[A-Z]{2}\d{4}-\d{3}\b/.test(t))return 'Nike';            // Nike / Jordan: CW2288-111
+ if(/\bM[A-Z0-9]{3,4}\d?[A-Z]{1,2}\/A\b/.test(t))return 'Apple';  // Apple: MTJV3ZM/A
+ if(/\b(?:[MWU]|ML|WL|MR|WR|GC|PC)\d{3,4}[A-Z]{2,4}\d?\b/.test(t))return 'New Balance'; // M990GL6, ML574EVG
+ if(/\b[A-Z]{2}\d{4}\b/.test(t)&&/ADIDAS/.test(t))return 'adidas';
+ return ''}
+function enrichQ(q){q=(q||'').trim();const b=styleBrand(q);if(b&&!q.toLowerCase().includes(b.toLowerCase()))q=b+' '+q;return q}
+function cleanBrand(b){return (b||'').replace(/\b(services?|s\.?\s?a\.?(\/n\.?v\.?)?|n\.?v\.?|s\.?p\.?a\.?|s\.?r\.?l\.?|gmbh|ltd|inc\.?|co\.?|company|group|italia|europe|international)\b/gi,'').replace(/\s{2,}/g,' ').replace(/[\s,\/.-]+$/,'').trim()}
+/* nomi insegnati dall'utente: restano sul telefono, così il codice la volta dopo è riconosciuto */
+function teachCode(code,q){if(!code||!q||q===code)return;try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r:{name:q,brand:'',q:q,taught:1}};localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}}
+/* dettatura con il microfono del telefono */
+function dictate(input,btn){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){input.focus();return}
+ try{const r=new R();r.lang={it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-PT'}[lang]||'it-IT';r.interimResults=false;r.maxAlternatives=1;btn&&btn.classList.add('on');
+  r.onresult=e=>{const t=e.results[0][0].transcript;input.value=(input.value&&!/\s$/.test(input.value)?input.value+' ':input.value)+t;input.dispatchEvent(new Event('input'))};
+  r.onend=()=>{btn&&btn.classList.remove('on')};r.onerror=()=>{btn&&btn.classList.remove('on');input.focus()};r.start()}catch(e){input.focus()}}
+/* box "cos'è?" quando le banche dati non conoscono il codice */
+function askBox(code,onQ){const N=NF[lang]||NF.en;const br=gs1Brand(code);
+ const h=`<p class="nfask">🤔 ${N.ask}</p>${br?`<small class="nfhint">${N.hint}: <b>${esc(br)}</b></small>`:''}
+  <div class="nfrow"><input class="lqi" id="nfq" value="${br?esc(br)+' ':''}" placeholder="${N.ph}" autocomplete="off" enterkeyhint="search"><button type="button" class="nfmic" id="nfmic" aria-label="${N.mic}">🎙️</button></div>`;
+ setTimeout(()=>{const i=$('#nfq'),m=$('#nfmic');if(!i)return;i.oninput=()=>onQ(enrichQ(i.value));if(i.value.trim())onQ(enrichQ(i.value));m&&(m.onclick=()=>dictate(i,m));try{i.focus();i.setSelectionRange(i.value.length,i.value.length)}catch(e){}},30);
+ return h}
+async function lookupWikidata(code){const alt=code.length===12?'0'+code:code;const q=`SELECT ?l ?b WHERE {VALUES ?g {"${code}" "${alt}"} ?i wdt:P3962 ?g. ?i rdfs:label ?l. FILTER(LANG(?l) IN ("${lang}","en")) OPTIONAL{?i wdt:P1716 ?x. ?x rdfs:label ?b. FILTER(LANG(?b)="en")}} LIMIT 1`;
+ const r=await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q));if(!r.ok)throw r.status;const j=await r.json();const x=j.results.bindings[0];if(!x)return null;
+ const nm=x.l.value,b=x.b?x.b.value:'';return {name:nm,brand:b,q:(b&&!nm.toLowerCase().includes(b.toLowerCase())?b+' ':'')+nm}}
 
 async function lookupCode(code){try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');if(c[code]&&c[code].t>Date.now()-30*864e5)return c[code].r}catch(e){}
  const r=await lookupCode0(code);if(r)try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r};const ks=Object.keys(c);if(ks.length>200)delete c[ks[0]];localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}return r}
@@ -806,27 +843,28 @@ async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.
   tries.push(async()=>{const j=await J('https://openlibrary.org/api/books?bibkeys=ISBN:'+code+'&format=json&jscmd=data');const v=j['ISBN:'+code];if(!v||!v.title)return null;const au=(v.authors||[]).map(x=>x.name);return {dep:'stripbooks',name:v.title,brand:au.join(', '),img:v.cover&&(v.cover.medium||v.cover.small),q:v.title+' '+(au[0]||'')}});
   tries.push(async()=>{const j=await J('https://www.googleapis.com/books/v1/volumes?q=isbn:'+code);const v=j.items&&j.items[0]&&j.items[0].volumeInfo;if(!v)return null;return {name:v.title,brand:(v.authors||[]).join(', '),img:v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail),q:v.title+' '+((v.authors||[])[0]||'')}})}
  const HDEP={'world.openfoodfacts.org':'grocery','world.openbeautyfacts.org':'beauty','world.openpetfoodfacts.org':'pets','world.openproductsfacts.org':''};
- for(const cc of [code,alt].filter(Boolean))for(const host of ['world.openfoodfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org','world.openproductsfacts.org'])tries.push(async()=>{const j=await J('https://'+host+'/api/v2/product/'+cc+'.json?fields=product_name,product_name_'+lang+',generic_name,brands,quantity,image_front_small_url');const p=j&&j.status===1&&j.product;const nm=p&&(p['product_name_'+lang]||p.product_name||p.generic_name);if(!nm)return null;const bl=(p.brands||'').split(',').map(x=>x.trim()).filter(Boolean);const br=bl.find(x=>!/\b(srl|s\.?p\.?a|spa|services|gmbh|ltd|inc|sa)\b/i.test(x))||bl[0]||'';return {dep:HDEP[host],name:nm+(p.quantity?' · '+p.quantity:''),brand:br,img:p.image_front_small_url,q:(br&&!nm.toLowerCase().includes(br.toLowerCase())?br+' ':'')+nm+(p.quantity?' '+p.quantity:'')}});
+ for(const cc of [code,alt].filter(Boolean))for(const host of ['world.openfoodfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org','world.openproductsfacts.org'])tries.push(async()=>{const j=await J('https://'+host+'/api/v2/product/'+cc+'.json?fields=product_name,product_name_'+lang+',generic_name,brands,quantity,image_front_small_url');const p=j&&j.status===1&&j.product;const nm=p&&(p['product_name_'+lang]||p.product_name||p.generic_name);if(!nm)return null;const bl=(p.brands||'').split(',').map(x=>x.trim()).filter(Boolean);const br=cleanBrand(bl.find(x=>!/\b(srl|s\.?p\.?a|spa|services|gmbh|ltd|inc|sa)\b/i.test(x))||bl[0]||'');return {dep:HDEP[host],name:nm+(p.quantity?' · '+p.quantity:''),brand:br,img:p.image_front_small_url,q:(br&&!nm.toLowerCase().includes(br.toLowerCase())?br+' ':'')+nm+(p.quantity?' '+p.quantity:'')}});
  const upcUrl=(/^https?:/.test(location.protocol)&&!/claude|claudeusercontent|localhost|127\.0\.0\.1/.test(location.hostname))?'/api/upc?upc=':'https://api.upcitemdb.com/prod/trial/lookup?upc=';
- tries.push(async()=>{const q=code.length===13&&code[0]==='0'?code.slice(1):code;let j;try{j=await J(upcUrl+q)}catch(e){if(upcUrl[0]!=='/')throw e;j=await J('https://api.upcitemdb.com/prod/trial/lookup?upc='+q)}const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:it.brand||'',img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
+ tries.push(async()=>{const q=code.length===13&&code[0]==='0'?code.slice(1):code;let j;try{j=await J(upcUrl+q)}catch(e){if(e===429){await new Promise(r=>setTimeout(r,1600));j=await J(upcUrl+q)}else{if(upcUrl[0]!=='/')throw e;j=await J('https://api.upcitemdb.com/prod/trial/lookup?upc='+q)}}const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:cleanBrand(it.brand||''),img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
+ tries.push(()=>lookupWikidata(code));
  // tutte le banche dati in parallelo: vince la prima che risponde con un nome
- const wrap=t=>withTimeout(t(),6000).then(r=>{if(r&&r.name)return r;throw 0});
+ const wrap=t=>withTimeout(t(),8000).then(r=>{if(r&&r.name)return r;throw 0});
  try{const r=await Promise.any(tries.map(wrap));r.q=r.q.split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return null}}
 
 function scanResult(code){const b=$('#sbx'),S=SCN[lang],P=PLK[lang];if(!b)return;b.className='sbx done';addRecent(code);
  b.innerHTML=`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div><p class="sdesc" id="plk">⏳ ${P[0]}</p>`;
  lookupCode(code).then(info=>{if(!$('#sbx')||$('#sbx').className!=='sbx done')return;
-  const o={what:info?info.q:code},oc={what:code};let price=0;
+  const o={what:info?info.q:(gs1Brand(code)||code)},oc={what:code};let price=0;
   const mk=mkList().map(m=>`<a href="${amazonUrl(o,{dom:MK[m][1]})}" target="_blank" rel="noopener sponsored" class="${MK[m][1]===STORE?'cur':''}">${MK[m][0]} ${m.toUpperCase()}</a>`).join('');
   b.innerHTML=(info?`<div class="pcard">${info.img?`<img src="${esc(info.img)}" alt="" loading="lazy" onerror="this.remove()">`:''}<div><small>${S[2]} · ${esc(code)}</small><b>${esc(info.name)}</b>${info.brand?`<span>${esc(info.brand)}</span>`:''}</div></div>`
-   :`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div><p class="sdesc">${P[4]}</p>`)+
+   :`<div class="sres"><span class="ok2">✓</span><div><small>${S[2]}</small><b>${esc(code)}</b></div></div>`+askBox(code,v=>{o.what=v||code;upd()})+`<a class="again" href="${amazonUrl(oc)}" target="_blank" rel="noopener sponsored">${(NF[lang]||NF.en).codeS}</a>`)+
   `<label class="pq">${P[1]}<span><input id="sp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label>
   <a class="cta" id="scta" href="${amazonUrl(o)}" target="_blank" rel="noopener sponsored"><span id="sctat">${P[3]}</span> <span>→</span></a>
   <div class="mk">${mk}</div>
   <div class="row"><button class="opt" type="button" id="sag">📷 ${S[4]}</button><button class="opt" type="button" id="ssv">${X[lang].save}</button></div>
   ${info?`<a class="again" href="${amazonUrl(oc)}" target="_blank" rel="noopener sponsored">${P[5]}</a>`:''}`;
   const upd=()=>{const v=parseFloat(($('#sp').value||'').replace(',','.'));price=v>0?v:0;const oo=Object.assign({},o,price?{budget:Math.max(1,Math.ceil(price)-1)}:{});$('#scta').href=amazonUrl(oo,price?{sort:'price-asc-rank'}:{});$('#sctat').textContent=price?`${P[2]} ${money(price)}`:P[3]};
-  $('#sp').oninput=upd;
+  $('#sp').oninput=upd;if(!info)$('#scta').addEventListener('click',()=>{if(o.what&&o.what!==code)teachCode(code,o.what)});
   $('#sag').onclick=scanOpen;$('#ssv').onclick=e=>{const q=info?info.q:code;const a2=getSaved().filter(x=>x!==q);a2.unshift(q);setSaved(a2);e.currentTarget.textContent=X[lang].saved;myTop()}})}
 function scan(){boomOpen();return;if(mode!=='home'){$('#q').value='';home()}scanOpen();const b=$('#sbx');b&&b.scrollIntoView({block:'center',behavior:'smooth'})}
 
@@ -1110,19 +1148,19 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   <button class="bm-btn" type="button" id="bmbtn"><span class="bm-ic">✕</span><span class="bm-tx">${K.close}</span></button>
   <button type="button" class="bm-app" id="bmapp"><img class="bm-ai" src="${LOGO}" alt="">${K.app} <i>→</i></button>`;
  document.body.appendChild(o);sndPaint();requestAnimationFrame(()=>o.classList.add('on'));
- let st='scan',q='',dep='',name='',ean='';
+ let st='scan',q='',dep='',name='',ean='',nf=false;
  const btn=$('#bmbtn'),card=$('#bmcard'),msg=$('#bmmsg'),v=o.querySelector('video');
  const toFound=()=>{st='found';o.classList.add('hit');const w0=$('#bmw0');if(w0){w0.textContent='BOOM!';w0.classList.remove('q');w0.classList.add('lit')}$('#bmgo').hidden=false;btn.classList.add('found');btn.querySelector('.bm-ic').textContent='✓';btn.querySelector('.bm-tx').textContent=K.found+' →';$('#bmocr').hidden=true};
  const showCard=(title,sub,extra)=>{card.hidden=false;card.innerHTML=`<small>${sub}</small><b>${esc(title)}</b>${extra||''}
    <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label><p class="bm-anon">${PRN[lang]||PRN.en}</p>
    <button type="button" class="bm-again" id="bmag">📷 ${K.again}</button>`;$('#bmag').onclick=boomOpen};
  const onCode=code=>{beep();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}toFound();msg.textContent='';
-  const isNum=/^\d{6,14}$/.test(code);q=isNum?code:code.slice(0,80);name=q;ean=isNum?code:'';addRecent(q);
+  const isNum=/^\d{6,14}$/.test(code);q=isNum?code:enrichQ(code.slice(0,80));name=q;ean=isNum?code:'';addRecent(q);
   showCard(isNum?code:q,K.read,`<p class="bm-wait" id="bmw">⏳ ${K.look}</p>`);
   if(!isNum){dep=guessDep(q);return}
   lookupCode(code).then(info=>{const w=$('#bmw');if(!$('#boomv'))return;
    if(info){q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code);if(sp)$('#bmsp').value=sp}
-   else if(w)w.textContent=K.nf})};
+   else{nf=true;q='';if(w)w.outerHTML=askBox(code,v=>{q=v;name=v;dep=guessDep(v)});const bt=btn.querySelector('.bm-tx');if(bt)bt.textContent=PLK[lang][3]+' →'}})};
  const onFail=()=>{msg.textContent=K.camNo;o.querySelector('.bm-cam').classList.add('off');$('#bmocr').hidden=true};
  boomCam=camStart(v,onCode,onFail,{onReady:api=>{const cp=api.caps();
    if(cp.torch){const t=$('#bt-t');t.hidden=false;let on=false;t.onclick=async()=>{on=!on;await api.torch(on);t.classList.toggle('on',on)}}
@@ -1130,9 +1168,10 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   onSlow:()=>{if(st==='scan'){msg.textContent='💡 '+K.nc;$('#bmocr').classList.add('pulse')}}});
  $('#bmapp').onclick=()=>boomClose(false,true);
  $('#bmocr').onclick=async()=>{const c=boomCam&&boomCam.grab();if(!c)return;const b=$('#bmocr');b.disabled=true;b.textContent='⏳ '+K.reading;
-  try{const r=await withTimeout(readLabel(c),25000);if(r&&r.q&&r.q.length>2){boomCam.stop();beep();toFound();q=r.q;name=r.q;dep=guessDep(r.q);addRecent(q);showCard(r.q,'🔤 '+K.label)}else{b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}}
+  try{const r=await withTimeout(readLabel(c),25000);if(r&&r.q&&r.q.length>2){boomCam.stop();beep();toFound();q=enrichQ(r.q);name=r.q;dep=guessDep(r.q);addRecent(q);showCard(r.q,'🔤 '+K.label)}else{b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}}
   catch(e){b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}};
  btn.onclick=()=>{if(st==='scan'){boomClose();return}
+  if(!q||q===ean){const i=$('#nfq');if(i){i.focus();i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake')}return}if(nf&&ean)teachCode(ean,q);
   const sp=parseFloat((($('#bmsp')||{}).value||'').replace(',','.'));const url=amazonUrl({what:q},{dep:dep});
   if(sp>0){try{localStorage.setItem('snb-pend',JSON.stringify({t:Date.now(),n:name||q,store:sp,e:ean}))}catch(e){}reportPrice({e:ean,n:name||q,p:sp})}
   kaching();if(isPhone()&&!installed()){goAmazon(url);return}const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener sponsored';document.body.appendChild(a);a.click();a.remove()}}
