@@ -4,7 +4,7 @@ import { getStore } from "@netlify/blobs";
 const EV = ["new", "dau", "dau_app", "install", "scan", "found", "nf", "ocr", "voice", "amz", "teach"];
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
-export default async (req) => {
+export default async (req, context) => {
   const store = getStore("stats");
   if (req.method === "POST") {
     let b = {};
@@ -15,7 +15,10 @@ export default async (req) => {
     const day = new Date().toISOString().slice(0, 10);
     const d = (await store.get(day, { type: "json" })) || {};
     d[e] = (d[e] || 0) + 1;
-    d["lang_" + lg] = e === "dau" ? (d["lang_" + lg] || 0) + 1 : (d["lang_" + lg] || 0);
+    if (e === "dau") d["lang_" + lg] = (d["lang_" + lg] || 0) + 1;
+    // solo il paese (es. IT, DE), ricavato dal server di Netlify: nessun IP, città o posizione salvati
+    const cc = (context && context.geo && context.geo.country && context.geo.country.code) || "XX";
+    if (["new", "dau", "install", "scan", "amz"].includes(e)) d[e + "_" + cc] = (d[e + "_" + cc] || 0) + 1;
     await store.setJSON(day, d);
     return J({ ok: true });
   }
