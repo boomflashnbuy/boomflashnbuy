@@ -815,6 +815,8 @@ function styleBrand(s){const t=(s||'').toUpperCase().trim();
  if(/\b(?:[MWU]|ML|WL|MR|WR|GC|PC)\d{3,4}[A-Z]{2,4}\d?\b/.test(t))return 'New Balance'; // M990GL6, ML574EVG
  if(/\b[A-Z]{2}\d{4}\b/.test(t)&&/ADIDAS/.test(t))return 'adidas';
  return ''}
+/* pulizia dei titoli delle banche dati: via taglie e sigle che confondono Amazon, marca davanti ai codici modello */
+function cleanQ(q){q=(q||'').replace(/\b(Men|Women)\s+s\b/gi,"$1's").replace(/,?\s*\bSize\s*\d+(?:[.,]5)?\s*(?:[MWY]|US|EU|UK)?\b/gi,' ').replace(/\b\d+(?:[.,]5)?\s*(?:Men'?s?|Women'?s?)\s*US\b/gi,' ').replace(/\s+-\s+(?=[A-Z]{2}\d{4}-\d{3})/g,' ').replace(/\s+[-–]\s+/g,' ').replace(/[,\s]+$/,'').replace(/\s{2,}/g,' ').trim();return enrichQ(q)}
 function enrichQ(q){q=(q||'').trim();const b=styleBrand(q);if(b&&!q.toLowerCase().includes(b.toLowerCase()))q=b+' '+q;return q}
 function cleanBrand(b){return (b||'').replace(/\b(services?|s\.?\s?a\.?(\/n\.?v\.?)?|n\.?v\.?|s\.?p\.?a\.?|s\.?r\.?l\.?|gmbh|ltd|inc\.?|co\.?|company|group|italia|europe|international)\b/gi,'').replace(/\s{2,}/g,' ').replace(/[\s,\/.-]+$/,'').trim()}
 /* nomi insegnati dall'utente: restano sul telefono, così il codice la volta dopo è riconosciuto */
@@ -851,7 +853,7 @@ async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.
  tries.push(()=>lookupWikidata(code));
  // tutte le banche dati in parallelo: vince la prima che risponde con un nome
  const wrap=t=>withTimeout(t(),8000).then(r=>{if(r&&r.name)return r;throw 0});
- try{const r=await Promise.any(tries.map(wrap));r.q=r.q.split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return await sharedName(code)}}
+ try{const r=await Promise.any(tries.map(wrap));r.q=cleanQ(r.q).split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return await sharedName(code)}}
 /* memoria condivisa: nomi insegnati dagli utenti (anonimi) */
 async function sharedName(code){try{if(!/^https?:/.test(location.protocol))return null;const r=await withTimeout(fetch('/api/names?code='+code),4000);if(!r.ok)return null;const j=await r.json();if(!j.name)return null;return {name:j.name,brand:'',q:j.name,shared:1}}catch(e){return null}}
 
