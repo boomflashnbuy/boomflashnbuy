@@ -1,0 +1,19 @@
+# BoomFlashnBuy
+
+> BoomFlashnBuy (also written Boom Flash'n'Buy) is a free web app that compares an in-store price with Amazon offers: scan a product barcode (EAN/UPC/ISBN), model code or label with the phone camera and instantly open the Amazon offers for the same product, filtered by the right brand. No install, no account. Works on iPhone and Android in the browser; on iPhone it also opens with "Hey Siri, boom". Languages: Italian, English, Spanish, French, German, Portuguese. Amazon stores in 30 countries. BoomFlashnBuy is an Amazon Associate (commissions at no extra cost to the user).
+
+## App
+- [Open the app](https://boomflashnbuy.netlify.app/): barcode scanner, voice and text search, price comparison store vs Amazon
+- [FAQ (EN)](https://boomflashnbuy.netlify.app/en/faq/): what it is, how it works, cost, privacy
+- [FAQ (IT)](https://boomflashnbuy.netlify.app/faq/): cos'è, come funziona, costi, privacy
+
+## Guides
+- [Store or Amazon? (EN)](https://boomflashnbuy.netlify.app/en/store-or-amazon/)
+- [Barcode scanner app (EN)](https://boomflashnbuy.netlify.app/en/barcode-scanner-app/)
+- [Negozio o Amazon? (IT)](https://boomflashnbuy.netlify.app/guide/negozio-o-amazon/)
+- [App scanner codice a barre (IT)](https://boomflashnbuy.netlify.app/guide/app-scanner-codice-a-barre/)
+- [Sneakers: negozio o Amazon? (IT)](https://boomflashnbuy.netlify.app/moda/sneakers/)
+
+## Video
+- [YouTube @boomflashnbuy](https://www.youtube.com/@boomflashnbuy)
+- [TikTok @boom.flash.n.buy](https://www.tiktok.com/@boom.flash.n.buy)
