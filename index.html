@@ -820,7 +820,7 @@ function cleanQ(q){q=(q||'').replace(/\b(Men|Women)\s+s\b/gi,"$1's").replace(/,?
 function enrichQ(q){q=(q||'').trim();const b=styleBrand(q);if(b&&!q.toLowerCase().includes(b.toLowerCase()))q=b+' '+q;return q}
 function cleanBrand(b){return (b||'').replace(/\b(services?|s\.?\s?a\.?(\/n\.?v\.?)?|n\.?v\.?|s\.?p\.?a\.?|s\.?r\.?l\.?|gmbh|ltd|inc\.?|co\.?|company|group|italia|europe|international)\b/gi,'').replace(/\s{2,}/g,' ').replace(/[\s,\/.-]+$/,'').trim()}
 /* nomi insegnati dall'utente: restano sul telefono, così il codice la volta dopo è riconosciuto */
-function teachCode(code,q){if(!code||!q||q===code)return;try{fetch('/api/names?code='+code,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:q}),keepalive:true}).catch(()=>{})}catch(e){}try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r:{name:q,brand:'',q:q,taught:1}};localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}}
+function teachCode(code,q){if(!code||!q||q===code)return;bfbStat('teach');try{fetch('/api/names?code='+code,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:q}),keepalive:true}).catch(()=>{})}catch(e){}try{const c=JSON.parse(localStorage.getItem('snb-lk')||'{}');c[code]={t:Date.now(),r:{name:q,brand:'',q:q,taught:1}};localStorage.setItem('snb-lk',JSON.stringify(c))}catch(e){}}
 /* dettatura con il microfono del telefono */
 function dictate(input,btn){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){input.focus();return}
  try{const r=new R();r.lang={it:'it-IT',en:'en-GB',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-PT'}[lang]||'it-IT';r.interimResults=false;r.maxAlternatives=1;btn&&btn.classList.add('on');
@@ -1139,7 +1139,7 @@ addEventListener('pageshow',()=>setTimeout(checkPend,300));
 /* su telefono Amazon si apre nella stessa pagina: per tornare basta "indietro" */
 const BK={it:'Per tornare all’app usa ◀ Indietro',en:'To come back, use ◀ Back',es:'Para volver, usa ◀ Atrás',fr:'Pour revenir, utilise ◀ Retour',de:'Zurück zur App mit ◀ Zurück',pt:'Para voltar, usa ◀ Voltar'};
 const isPhone=()=>matchMedia('(pointer:coarse)').matches&&innerWidth<900;
-function goAmazon(url){try{const u=new URL(location.href);if(u.searchParams.has('boom')||u.searchParams.has('scan')||u.searchParams.has('go')){u.searchParams.delete('boom');u.searchParams.delete('scan');u.searchParams.delete('go');history.replaceState(null,'',u.pathname+(u.search?u.search:''))}}catch(e){}
+function goAmazon(url){bfbStat('amz');try{const u=new URL(location.href);if(u.searchParams.has('boom')||u.searchParams.has('scan')||u.searchParams.has('go')){u.searchParams.delete('boom');u.searchParams.delete('scan');u.searchParams.delete('go');history.replaceState(null,'',u.pathname+(u.search?u.search:''))}}catch(e){}
  let n=0;try{n=+localStorage.getItem('snb-bk')||0;localStorage.setItem('snb-bk',n+1)}catch(e){}
  if(n<3){toast(BK[lang]||BK.en);setTimeout(()=>location.href=url,1100)}else setTimeout(()=>location.href=url,350)}
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href*="amazon."]');if(!a)return;kaching();if(!isPhone()||installed())return;e.preventDefault();goAmazon(a.href)},true);
@@ -1166,13 +1166,13 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
  const showCard=(title,sub,extra)=>{card.hidden=false;card.innerHTML=`<small>${sub}</small><b>${esc(title)}</b>${extra||''}
    <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label><p class="bm-anon">${PRN[lang]||PRN.en}</p>
    <button type="button" class="bm-again" id="bmag">📷 ${K.again}</button>`;$('#bmag').onclick=boomOpen};
- const onCode=code=>{beep();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}toFound();msg.textContent='';
+ const onCode=code=>{bfbStat('scan');beep();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}toFound();msg.textContent='';
   const isNum=/^\d{6,14}$/.test(code);q=isNum?code:enrichQ(code.slice(0,80));name=q;ean=isNum?code:'';addRecent(q);
   showCard(isNum?code:q,K.read,`<p class="bm-wait" id="bmw">⏳ ${K.look}</p>`);
   if(!isNum){dep=guessDep(q);return}
   lookupCode(code).then(info=>{const w=$('#bmw');if(!$('#boomv'))return;
-   if(info){q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code,fixBtn());if(sp)$('#bmsp').value=sp;bindFix(()=>q,v=>{q=v;name=v})}
-   else{nf=true;q='';if(w)w.outerHTML=askBox(code,v=>{q=v;name=v;dep=guessDep(v)});const bt=btn.querySelector('.bm-tx');if(bt)bt.textContent=PLK[lang][3]+' →'}})};
+   if(info){bfbStat('found');q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code,fixBtn());if(sp)$('#bmsp').value=sp;bindFix(()=>q,v=>{q=v;name=v})}
+   else{bfbStat('nf');nf=true;q='';if(w)w.outerHTML=askBox(code,v=>{q=v;name=v;dep=guessDep(v)});const bt=btn.querySelector('.bm-tx');if(bt)bt.textContent=PLK[lang][3]+' →'}})};
  const onFail=()=>{msg.textContent=K.camNo;o.querySelector('.bm-cam').classList.add('off');$('#bmocr').hidden=true};
  boomCam=camStart(v,onCode,onFail,{onReady:api=>{const cp=api.caps();
    if(cp.torch){const t=$('#bt-t');t.hidden=false;let on=false;t.onclick=async()=>{on=!on;await api.torch(on);t.classList.toggle('on',on)}}
@@ -1180,7 +1180,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   onSlow:()=>{if(st==='scan'){msg.textContent='💡 '+K.nc;$('#bmocr').classList.add('pulse')}}});
  $('#bmapp').onclick=()=>boomClose(false,true);
  $('#bmocr').onclick=async()=>{const c=boomCam&&boomCam.grab();if(!c)return;const b=$('#bmocr');b.disabled=true;b.textContent='⏳ '+K.reading;
-  try{const r=await withTimeout(readLabel(c),25000);if(r&&r.q&&r.q.length>2){boomCam.stop();beep();toFound();q=enrichQ(r.q);name=r.q;dep=guessDep(r.q);addRecent(q);showCard(r.q,'🔤 '+K.label)}else{b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}}
+  try{const r=await withTimeout(readLabel(c),25000);if(r&&r.q&&r.q.length>2){bfbStat('ocr');boomCam.stop();beep();toFound();q=enrichQ(r.q);name=r.q;dep=guessDep(r.q);addRecent(q);showCard(r.q,'🔤 '+K.label)}else{b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}}
   catch(e){b.disabled=false;b.textContent='🔤 '+K.label;msg.textContent=K.ocrNo}};
  btn.onclick=()=>{if(st==='scan'){boomClose();return}
   if(!q||q===ean){const i=$('#nfq');if(i){i.focus();i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake')}return}if(nf&&ean)teachCode(ean,q);
@@ -1314,6 +1314,11 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 langBtn();render();
 try{const P1=new URLSearchParams(location.search);if(P1.get('boom')==='1'||P1.get('scan')==='1')setTimeout(boomOpen,50)}catch(e){}
 try{const P0=new URLSearchParams(location.search),q0=P0.get('q');if(q0){$('#q').value=q0;run();if(P0.get('go')==='1'){const a=document.querySelector('#hero a.cta')||document.querySelector('a.cta');if(a)location.replace(a.href)}}}catch(e){}
+
+/* contatore anonimo (nessun dato personale): utenti nuovi, attivi, installazioni, scansioni, clic Amazon */
+function bfbStat(e){try{if(!/^https?:/.test(location.protocol)||/localhost|127\.0\.0\.1|claude/.test(location.hostname))return;navigator.sendBeacon('/api/stats',JSON.stringify({e:e,l:typeof lang==='string'?lang:''}))}catch(x){}}
+(function(){try{const t=new Date().toISOString().slice(0,10),ls=localStorage;if(!ls.getItem('snb-uid')){ls.setItem('snb-uid','1');bfbStat('new')}if(ls.getItem('snb-day')!==t){ls.setItem('snb-day',t);bfbStat('dau')}const sa=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;if(sa){if(!ls.getItem('snb-inst')){ls.setItem('snb-inst','1');bfbStat('install')}if(ls.getItem('snb-sday')!==t){ls.setItem('snb-sday',t);bfbStat('dau_app')}}}catch(e){}})();
+document.addEventListener('click',e=>{const a=e.target&&e.target.closest&&e.target.closest('a[href*="amazon."]');if(a)bfbStat('amz')},true);
 </script>
 
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "760e9648eaeb44438772afe1ac5bb2e1"}'></script>
