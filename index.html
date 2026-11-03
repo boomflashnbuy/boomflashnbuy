@@ -682,7 +682,8 @@ pt:{camT:'Scanner de preços na loja',camS:'Digitaliza o código de barras de qu
  beatRe:/(?:vi|visto|custa|paguei|encontrei)\s*(?:a|por)?\s*(\d+)\s*(?:€|euros?)?/,ref:/^(em|cor|marca|com|sem|só|modelo|preto|preta|branco|branca|vermelho|azul|cinzento|rosa|verde)\b/,refStrip:/^(cor|marca|modelo|só)\s+/,probEx:'tenho bolor na casa de banho'}};
 let hf=false;
 function hfNext(){if(hf)setTimeout(()=>{if(hf&&!document.body.classList.contains('listening'))$('#mic').click()},800)}
-function bstr(n){return lang==='en'?'£'+n:n+' €'}
+const CPRE=['£','$','R$','¥','₹'];function curFmt(n){const c=cur();return CPRE.includes(c)?c+n:n+' '+c}
+function bstr(n){return curFmt(n)}
 function refine(s){const N=NX[lang],T=L[lang];if(!last)return false;const p=parse(s);
  if(p.budget&&(!p.what||p.what.length<3)){$('#q').value=[last.what,last.size?T.size+' '+last.size:'',bstr(p.budget)].filter(Boolean).join(' ');run(true);return true}
  if(N.ref.test(s)){const add=s.replace(N.refStrip,'').trim();$('#q').value=[last.what+' '+add,last.size?T.size+' '+last.size:'',last.budget?bstr(last.budget):''].filter(Boolean).join(' ');run(true);return true}
@@ -908,7 +909,11 @@ function pickStore(){try{const s=localStorage.getItem('snb-store');if(s&&CUR[s])
  for(const x of ls){const n=String(x).slice(0,2).toLowerCase();if(STORE_BY_LANG[n])return STORE_BY_LANG[n]}
  const n0=String(ls[0]||'').slice(0,2).toLowerCase();return ['el','cs','sk','hu','ro','bg','hr','sl','da','fi','et','lv','lt','no','nb'].includes(n0)?'amazon.de':'amazon.com'}
 let STORE=pickStore();
-const tagFor=d=>d==='amazon.it'?AFF_TAG:'';
+// testi inglesi: valuta dello store (es. $ per gli USA) al posto di £
+(function(){const c=CUR[STORE];if(!c||c==='£')return;const fx=o=>{for(const k in o){const v=o[k];if(typeof v==='string')o[k]=v.replace(/£(?=\d)/g,c);else if(v&&typeof v==='object')fx(v)}};try{fx(L.en);fx(OCC.en);fx(NX.en)}catch(e){}})();
+// OneLink attivo (Preferenze di guadagno globali): stesso ID su questi 10 store
+const TAG_DOMS=['amazon.it','amazon.ca','amazon.fr','amazon.de','amazon.nl','amazon.pl','amazon.co.uk','amazon.es','amazon.com','amazon.se'];
+const tagFor=d=>TAG_DOMS.includes(d)?AFF_TAG:'';
 const cur=()=>CUR[STORE]||(lang==='en'?'£':'€');
 /* filtro marca di Amazon: se la ricerca contiene una marca nota, Amazon mostra solo quella marca (niente scarpe di altri marchi) */
 const AMZ_BRANDS=['Nike','adidas','Puma','New Balance','Asics','Converse','Vans','Skechers','Reebok','Crocs','Geox','Superga','Lacoste','Timberland','Apple','Samsung','Xiaomi','Sony','JBL','Bose','Garmin','Logitech','Philips','Bosch','Dyson','Braun','Tefal',"De'Longhi",'LEGO','Nivea','Barilla','Lavazza','Ferrero','Nutella','Coca-Cola'];
@@ -965,7 +970,7 @@ function askSpend(name,amt,cb){const P=SP[lang];const sh=document.createElement(
  sh.querySelector('#sx').onclick=()=>sh.remove();sh.onclick=e=>{if(e.target===sh)sh.remove()};
  sh.querySelector('#sk').onclick=()=>{const n=sh.querySelector('#sn').value.trim(),v=parseFloat(ia.value.replace(',','.'));if(!n||!(v>0)){ia.focus();return}
   const s=getSpend();s.unshift({n,a:Math.round(v*100)/100,t:Date.now()});setSpend(s);sh.remove();cb&&cb()}}
-function money(v){return (lang==='en'?'£':'')+v.toLocaleString(lang,{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2})+(lang==='en'?'':' €')}
+function money(v){return curFmt(v.toLocaleString(lang,{minimumFractionDigits:v%1?2:0,maximumFractionDigits:2}))}
 function showSpend(per){const P=SP[lang];mode='spend';per=per||'month';document.body.classList.remove('home');tab('spend');$('#hint').textContent='';
  const s=getSpend(),now=new Date();const start={week:(()=>{const x=new Date(now);const dd=(x.getDay()+6)%7;x.setHours(0,0,0,0);x.setDate(x.getDate()-dd);return x})(),month:new Date(now.getFullYear(),now.getMonth(),1),year:new Date(now.getFullYear(),0,1),all:new Date(0)}[per];
  const f=s.filter(x=>x.t>=start.getTime()),tot=f.reduce((q,x)=>q+x.a,0);
@@ -1293,7 +1298,7 @@ function voiceHelp(){const Y=X[lang];const sh=document.createElement('div');sh.c
 
 const sel=$('#lang');sel.innerHTML=Object.entries(L).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');sel.value=lang;
 sel.onchange=()=>{lang=sel.value;try{localStorage.setItem('snb-lang',lang)}catch(e){}render()};
-const FL={it:'🇮🇹',en:'🇬🇧',es:'🇪🇸',fr:'🇫🇷',de:'🇩🇪',pt:'🇵🇹'},LT={it:['Lingua','Altre lingue'],en:['Language','More languages'],es:['Idioma','Más idiomas'],fr:['Langue','Autres langues'],de:['Sprache','Weitere Sprachen'],pt:['Idioma','Outras línguas']};
+const FL={it:'🇮🇹',en:STORE==='amazon.com'?'🇺🇸':'🇬🇧',es:'🇪🇸',fr:'🇫🇷',de:'🇩🇪',pt:'🇵🇹'},LT={it:['Lingua','Altre lingue'],en:['Language','More languages'],es:['Idioma','Más idiomas'],fr:['Langue','Autres langues'],de:['Sprache','Weitere Sprachen'],pt:['Idioma','Outras línguas']};
 function setLang(k){lang=k;sel.value=k;try{localStorage.setItem('snb-lang',k)}catch(e){}render()}
 function langBtn(){$('#lb').innerHTML=`${FL[lang]} ${lang.toUpperCase()}`}
 $('#lb').onclick=()=>{const t=LT[lang];const sh=document.createElement('div');sh.className='sheet';
