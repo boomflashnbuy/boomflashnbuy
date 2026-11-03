@@ -18,6 +18,9 @@ export default async (req, context) => {
     const keys = [e];
     if (e === "dau") keys.push("lang_" + lg);
     if (["new", "dau", "install", "scan", "amz"].includes(e)) keys.push(e + "_" + cc);
+    // provenienza (es. "yt" = video YouTube): conteggi separati per misurare la conversione video -> app
+    const src = /^[a-z0-9]{1,12}$/.test(b.s || "") ? b.s : "";
+    if (src) keys.push("src_" + src + "_" + e);
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     await store.set(`h/${day}/${id}`, keys.join(","));
     return J({ ok: true });

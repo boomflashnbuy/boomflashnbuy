@@ -1324,7 +1324,9 @@ try{const P1=new URLSearchParams(location.search);if(P1.get('boom')==='1'||P1.ge
 try{const P0=new URLSearchParams(location.search),q0=P0.get('q');if(q0){$('#q').value=q0;run();if(P0.get('go')==='1'){const a=document.querySelector('#hero a.cta')||document.querySelector('a.cta');if(a)location.replace(a.href)}}}catch(e){}
 
 /* contatore anonimo (nessun dato personale): utenti nuovi, attivi, installazioni, scansioni, clic Amazon */
-function bfbStat(e){try{if(!/^https?:/.test(location.protocol)||/localhost|127\.0\.0\.1|claude/.test(location.hostname))return;navigator.sendBeacon('/api/stats',JSON.stringify({e:e,l:typeof lang==='string'?lang:''}))}catch(x){}}
+// provenienza (es. ?src=yt dai video YouTube): si ricorda la prima, per misurare quanti arrivano dai video e cosa fanno dopo
+(function(){try{const q=new URLSearchParams(location.search).get('src');if(q&&/^[a-z0-9]{1,12}$/.test(q)&&!localStorage.getItem('snb-src'))localStorage.setItem('snb-src',q)}catch(e){}})();
+function bfbStat(e){try{if(!/^https?:/.test(location.protocol)||/localhost|127\.0\.0\.1|claude/.test(location.hostname))return;let src='';try{src=localStorage.getItem('snb-src')||''}catch(x){}navigator.sendBeacon('/api/stats',JSON.stringify({e:e,l:typeof lang==='string'?lang:'',s:src}))}catch(x){}}
 (function(){try{const t=new Date().toISOString().slice(0,10),ls=localStorage;if(!ls.getItem('snb-uid')){ls.setItem('snb-uid','1');bfbStat('new')}if(ls.getItem('snb-day')!==t){ls.setItem('snb-day',t);bfbStat('dau')}const sa=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;if(sa){if(!ls.getItem('snb-inst')){ls.setItem('snb-inst','1');bfbStat('install')}if(ls.getItem('snb-sday')!==t){ls.setItem('snb-sday',t);bfbStat('dau_app')}}}catch(e){}})();
 document.addEventListener('click',e=>{const a=e.target&&e.target.closest&&e.target.closest('a[href*="amazon."]');if(a)bfbStat('amz')},true);
 </script>
