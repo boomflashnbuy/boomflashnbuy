@@ -241,6 +241,19 @@ body.home .scanbig b{font-size:21px;line-height:1.1}body.home .scanbig em{displa
 .lqi{display:block;width:100%;box-sizing:border-box;margin:10px 0 4px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--lime);background:#0f110d;color:var(--fg);font:800 16px var(--body)}
 .vtools{position:absolute;left:8px;bottom:8px;display:flex;gap:6px}.vtools button{border:0;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;font:800 12px var(--body);padding:6px 10px;cursor:pointer}.vtools button.on{background:var(--lime);color:var(--lime-ink)}
 .ocrb{display:flex;align-items:center;gap:10px;width:100%;margin:8px 0;background:var(--panel);border:1.5px dashed #4a5240;border-radius:14px;padding:10px 12px;color:var(--fg);text-align:left;cursor:pointer}.ocrb>span:first-child{font-size:22px}.ocrb b{display:block;font:800 14px var(--body)}.ocrb em{display:block;font:600 12px var(--body);color:var(--soft);font-style:normal}.ocrb.pulse{border-color:var(--lime);border-style:solid;box-shadow:0 0 0 3px rgba(212,255,74,.25)}.ocrb:disabled{opacity:.7}
+.bfbar{display:none}
+body.bf{background:#000}
+body.bf .bfbar{display:block;position:sticky;top:0;z-index:50;overflow:hidden;background:#000;border-bottom:2px solid var(--lime);height:34px}
+.bfbar .trk{display:flex;width:max-content;animation:bfm 22s linear infinite}
+.bfbar span{font:italic 900 15px/34px var(--display);color:var(--lime);letter-spacing:.5px;white-space:nowrap;padding-right:28px}
+.bfbar span b{color:#fff}
+@keyframes bfm{to{transform:translateX(-50%)}}
+body.bf .hero{position:relative}
+body.bf .hero::before{content:"";position:absolute;inset:-60px -16px auto -16px;height:300px;background:repeating-linear-gradient(135deg,rgba(212,255,74,.08) 0 14px,transparent 14px 28px);-webkit-mask-image:linear-gradient(#000 40%,transparent);mask-image:linear-gradient(#000 40%,transparent);pointer-events:none;z-index:0}
+.bftag{display:none}
+body.bf .bftag{display:inline-flex;flex-direction:column;align-items:flex-start;align-self:center;width:auto;max-width:90%;position:relative;z-index:1;margin:4px auto 12px;line-height:1.05;background:var(--lime);color:#000;font:italic 900 18px var(--display);padding:8px 16px 8px 26px;border-radius:6px 999px 999px 6px;transform:rotate(-3deg);box-shadow:0 6px 24px rgba(212,255,74,.35)}
+body.bf .bftag::before{content:"";position:absolute;left:9px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#000}
+body.bf .prv{background:radial-gradient(120% 70% at 50% 15%,#2a3a10 0%,#000 62%)}
 .prv{position:fixed;inset:0;z-index:70;background:radial-gradient(120% 70% at 50% 15%,#2a3a10 0%,#0B0C0A 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:calc(24px + env(safe-area-inset-top,0px)) 22px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff}
 .prv img{width:96px;height:96px;border-radius:50%;box-shadow:0 0 40px rgba(198,255,60,.35)}
 .prv h2{font:900 italic clamp(30px,8vw,44px)/1.05 system-ui,sans-serif;margin:0;letter-spacing:-.5px}.prv h2 b{color:#C6FF3C}
@@ -1331,6 +1344,14 @@ try{const P1=new URLSearchParams(location.search);if(P1.get('boom')==='1'||P1.ge
 try{const P0=new URLSearchParams(location.search),q0=P0.get('q');if(q0){$('#q').value=q0;run();if(P0.get('go')==='1'){const a=document.querySelector('#hero a.cta')||document.querySelector('a.cta');if(a)location.replace(a.href)}}}catch(e){}
 
 
+
+/* Veste Black Friday: attiva da sola dal 20/11 al 30/11/2026 (ora italiana), poi torna quella di sempre. Anteprima: ?bf=1 */
+const BFT={it:['BLACK FRIDAY','Prima di comprare, scansiona','Controlla se su Amazon costa meno'],en:['BLACK FRIDAY','Scan before you buy','See if Amazon is cheaper'],es:['BLACK FRIDAY','Antes de comprar, escanea','Mira si en Amazon cuesta menos'],fr:['BLACK FRIDAY','Scanne avant d’acheter','Vois si Amazon est moins cher'],de:['BLACK FRIDAY','Erst scannen, dann kaufen','Schau, ob Amazon günstiger ist'],pt:['BLACK FRIDAY','Antes de comprar, lê o código','Vê se na Amazon custa menos']};
+function bfOn(){try{const P=new URLSearchParams(location.search);if(P.get('bf')==='0')return false;if(P.get('bf')==='1')return true}catch(e){}const t=Date.now();return t>=Date.UTC(2026,10,19,23,0)&&t<Date.UTC(2026,10,30,23,0)}
+function bfApply(){if(!bfOn())return;const K=BFT[lang]||BFT.en;document.body.classList.add('bf');
+ if(!document.querySelector('.bfbar')){const b=document.createElement('div');b.className='bfbar';const one=`<span><b>${K[0]}</b> · ${K[1]} · ${K[2]} ·</span>`;b.innerHTML=`<div class="trk">${one.repeat(6)}</div>`;document.body.insertBefore(b,document.body.firstChild)}
+ const h=document.getElementById('hero');if(h&&!h.querySelector('.bftag')){const g=document.createElement('div');g.className='bftag';g.innerHTML=K[0]+'<small style="font:italic 800 13px var(--display);opacity:.85">'+K[1]+'</small>';h.insertBefore(g,h.firstChild)}}
+try{bfApply();new MutationObserver(()=>{const h=document.getElementById('hero');if(document.body.classList.contains('bf')&&h&&!h.querySelector('.bftag'))bfApply()}).observe(document.getElementById('hero')||document.body,{childList:true})}catch(e){}
 /* "Prova ora": chi arriva dai social o con ?prova vede subito un solo tasto enorme che apre la fotocamera */
 const PRV={it:{h:'Prova <b>adesso</b>',p:'Prendi un prodotto che hai in casa: una bottiglia, un libro, un barattolo.',b:'Inquadra un codice a barre',s:'Gratis · niente da installare · dal browser',k:'Prima guardo l’app'},
 en:{h:'Try it <b>now</b>',p:'Grab anything at home: a bottle, a book, a jar.',b:'Scan a barcode',s:'Free · nothing to install · in your browser',k:'Show me the app first'},
