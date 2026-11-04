@@ -837,6 +837,15 @@ function styleBrand(s){const t=(s||'').toUpperCase().trim();
  if(/\b[A-Z]{2}\d{4}\b/.test(t)&&/ADIDAS/.test(t))return 'adidas';
  return ''}
 /* pulizia dei titoli delle banche dati: via taglie e sigle che confondono Amazon, marca davanti ai codici modello */
+/* titoli dalle banche dati: via il simbolo ℮ dopo il peso e le frasi da venditore (spedizione, "nuovo sigillato"...) che sporcano la ricerca Amazon */
+function cleanTitle(t){t=(t||'').replace(/℮/g,' ').replace(/(\d\s*(?:mg|g|kg|ml|cl|dl|l|oz|lb)\.?)\s+e(?=\s|$|[),;])/gi,'$1');
+ t=t.replace(/[\s,;:|\-–]*\b(?:ships?\s+(?:from|fast|free|worldwide|today|same)|free\s+(?:shipping|ship)|fast\s+(?:shipping|ship|delivery)|express\s+shipping|with\s+tracking|w\/\s*tracking)\b.*$/i,'');
+ t=t.replace(/\b(?:brand\s+new(?:\s+(?:and\s+)?sealed)?|new\s+in\s+box|new\s+sealed|factory\s+sealed|nib)\b/gi,' ');
+ return t.replace(/\s{2,}/g,' ').replace(/[\s,\/:;|\-–]+$/,'').trim()}
+/* max n parole, senza spezzare una parentesi: "(Nintendo Switch)" resta intera se chiude entro 4 parole, altrimenti si toglie il pezzo aperto */
+function cutWords(q,n){const w=(q||'').split(/\s+/).filter(Boolean);let k=Math.min(n,w.length);const open=x=>(x.match(/\(/g)||[]).length-(x.match(/\)/g)||[]).length;
+ if(open(w.slice(0,k).join(' '))>0){let e=k;while(e<w.length&&e<k+4&&open(w.slice(0,e).join(' '))>0)e++;k=open(w.slice(0,e).join(' '))>0?k:e}
+ return w.slice(0,k).join(' ').replace(/\s*\([^)]*$/,'').replace(/[\s,\/:;|\-–]+$/,'')}
 function cleanQ(q){q=(q||'').replace(/\b(Men|Women)\s+s\b/gi,"$1's").replace(/,?\s*\bSize\s*\d+(?:[.,]5)?\s*(?:[MWY]|US|EU|UK)?\b/gi,' ').replace(/\b\d+(?:[.,]5)?\s*(?:Men'?s?|Women'?s?)\s*US\b/gi,' ').replace(/\s+-\s+(?=[A-Z]{2}\d{4}-\d{3})/g,' ').replace(/\s+[-–]\s+/g,' ').replace(/[,\s]+$/,'').replace(/\s{2,}/g,' ').trim();return enrichQ(q)}
 function enrichQ(q){q=(q||'').trim();const b=styleBrand(q);if(b&&!q.toLowerCase().includes(b.toLowerCase()))q=b+' '+q;return q}
 function cleanBrand(b){return (b||'').replace(/\b(services?|s\.?\s?a\.?(\/n\.?v\.?)?|n\.?v\.?|s\.?p\.?a\.?|s\.?r\.?l\.?|gmbh|ltd|inc\.?|co\.?|company|group|italia|europe|international)\b/gi,'').replace(/\s{2,}/g,' ').replace(/[\s,\/.-]+$/,'').trim()}
@@ -873,11 +882,11 @@ async function lookupCode0(code){const J=async u=>{const r=await fetch(u);if(!r.
  const HDEP={'world.openfoodfacts.org':'grocery','world.openbeautyfacts.org':'beauty','world.openpetfoodfacts.org':'pets','world.openproductsfacts.org':''};
  for(const cc of [code,alt].filter(Boolean))for(const host of ['world.openfoodfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org','world.openproductsfacts.org'])tries.push(async()=>{const j=await J('https://'+host+'/api/v2/product/'+cc+'.json?fields=product_name,product_name_'+lang+',generic_name,brands,quantity,image_front_small_url');const p=j&&j.status===1&&j.product;const nm=p&&(p['product_name_'+lang]||p.product_name||p.generic_name);if(!nm)return null;const bl=(p.brands||'').split(',').map(x=>x.trim()).filter(Boolean);const br=cleanBrand(bl.find(x=>!/\b(srl|s\.?p\.?a|spa|services|gmbh|ltd|inc|sa)\b/i.test(x))||bl[0]||'');return {dep:HDEP[host],name:nm+(p.quantity?' · '+p.quantity:''),brand:br,img:p.image_front_small_url,q:(br&&!nm.toLowerCase().includes(br.toLowerCase())?br+' ':'')+nm+(p.quantity?' '+p.quantity:'')}});
  const upcUrl=(/^https?:/.test(location.protocol)&&!/claude|claudeusercontent|localhost|127\.0\.0\.1/.test(location.hostname))?'/api/upc?upc=':'https://api.upcitemdb.com/prod/trial/lookup?upc=';
- tries.push(async()=>{const q=code.length===13&&code[0]==='0'?code.slice(1):code;let j;try{j=await J(upcUrl+q)}catch(e){if(e===429){await new Promise(r=>setTimeout(r,1600));j=await J(upcUrl+q)}else{if(upcUrl[0]!=='/')throw e;j=await J('https://api.upcitemdb.com/prod/trial/lookup?upc='+q)}}const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:cleanBrand(it.brand||''),img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
+ tries.push(async()=>{const q=code.length===13&&code[0]==='0'?code.slice(1):code;let j;try{j=await J(upcUrl+q)}catch(e){/* il proxy condivide un limite giornaliero tra tutti: se è esaurito (429) o non risponde, si chiede direttamente dal telefono dell'utente (limite suo) */if(upcUrl[0]!=='/'){if(e!==429)throw e;await new Promise(r=>setTimeout(r,1600));j=await J(upcUrl+q)}else j=await J('https://api.upcitemdb.com/prod/trial/lookup?upc='+q)}const it=j&&j.items&&j.items[0];if(!it||!it.title)return null;return {name:it.title,brand:cleanBrand(it.brand||''),img:(it.images||[]).find(x=>/^https/.test(x))||(it.images||[])[0],q:it.title}});
  tries.push(()=>lookupWikidata(code));
  // tutte le banche dati in parallelo: vince la prima che risponde con un nome
  const wrap=t=>withTimeout(t(),8000).then(r=>{if(r&&r.name)return r;throw 0});
- try{const r=await Promise.any(tries.map(wrap));r.q=cleanQ(r.q).split(/\s+/).slice(0,9).join(' ');if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return await sharedName(code)}}
+ try{const r=await Promise.any(tries.map(wrap));r.name=cleanTitle(r.name);r.q=cutWords(cleanQ(cleanTitle(r.q)),9);if(r.img)r.img=r.img.replace(/^http:/,'https:');return r}catch(e){return await sharedName(code)}}
 /* memoria condivisa: nomi insegnati dagli utenti (anonimi) */
 async function sharedName(code){try{if(!/^https?:/.test(location.protocol))return null;const r=await withTimeout(fetch('/api/names?code='+code),4000);if(!r.ok)return null;const j=await r.json();if(!j.name)return null;return {name:j.name,brand:'',q:j.name,shared:1}}catch(e){return null}}
 
