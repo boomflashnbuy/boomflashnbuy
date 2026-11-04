@@ -1,0 +1,24 @@
+{
+ "it": {
+  "fmt": "{} €",
+  "pill": "GIOCO",
+  "swipe": "Scorri →",
+  "example": "Prezzi di esempio",
+  "store": "Negozio",
+  "h1a": "Quanto costa",
+  "h1b": "su Amazon?",
+  "ask": "Scrivi la tua risposta e scorri",
+  "r1a": "Stessa borsa.",
+  "r1b": "Una scansione.",
+  "h2a": "Round 2:",
+  "h2b": "il monopattino",
+  "ask2": "Di più o di meno? Commenta e scorri",
+  "r2a": "Spedizione",
+  "r2b": "inclusa.",
+  "c1": "Prima di pagare,",
+  "c2": "scansiona.",
+  "cta": "Inquadra il codice a barre in negozio e scopri in <b>1 secondo</b> se su Amazon costa meno.<br><br>Gratis · niente da scaricare · dal browser.",
+  "btn": "Link in bio",
+  "send": "Mandalo a chi paga sempre di più"
+ }
+}
