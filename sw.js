@@ -1,4 +1,4 @@
-const C='snb-v26';
+const C='snb-v27';
 const CORE=['./','manifest.webmanifest','icons/icon-192.png','icons/apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(CORE)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))));self.clients.claim()});
@@ -13,5 +13,8 @@ self.addEventListener('fetch',e=>{const r=e.request,u=new URL(r.url);
  // Other pages (guides, video, verification files): straight from the network
  const shell=u.pathname==='/'||u.pathname==='/index.html';
  if(r.mode==='navigate'&&!shell)return;
- const key=r.mode==='navigate'?'./':r;
+ // App page: network-first (le correzioni arrivano subito a tutti), cache solo se la rete è lenta (>2,5 s) o assente
+ if(r.mode==='navigate'){e.respondWith(caches.open(C).then(c=>{const net=fetch(r).then(x=>{if(x.ok)c.put('./',x.clone());return x});
+  return Promise.race([net,new Promise(res=>setTimeout(()=>res(null),2500))]).then(x=>x||c.match('./').then(m=>m||net)).catch(()=>c.match('./').then(m=>m||Response.error()))}));return}
+ const key=r;
  e.respondWith(caches.open(C).then(c=>c.match(key).then(m=>{const net=fetch(r).then(x=>{if(x.ok)c.put(key,x.clone());return x}).catch(()=>m);return m||net})))});
