@@ -1,7 +1,7 @@
 // Contatore anonimo dell'app: nessun dato personale, solo totali giornalieri per tipo di evento.
 import { getStore } from "@netlify/blobs";
 
-const EV = ["new", "dau", "dau_app", "install", "scan", "found", "nf", "ocr", "voice", "amz", "teach"];
+const EV = ["new", "dau", "dau_app", "install", "scan", "found", "nf", "ocr", "voice", "amz", "teach", "prova"];
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 export default async (req, context) => {
@@ -17,7 +17,7 @@ export default async (req, context) => {
     const cc = (context && context.geo && context.geo.country && context.geo.country.code) || "XX";
     const keys = [e];
     if (e === "dau") keys.push("lang_" + lg);
-    if (["new", "dau", "install", "scan", "amz"].includes(e)) keys.push(e + "_" + cc);
+    if (["new", "dau", "install", "scan", "amz", "prova"].includes(e)) keys.push(e + "_" + cc);
     // provenienza (es. "yt" = video YouTube): conteggi separati per misurare la conversione video -> app
     const src = /^[a-z0-9]{1,12}$/.test(b.s || "") ? b.s : "";
     if (src) keys.push("src_" + src + "_" + e);
