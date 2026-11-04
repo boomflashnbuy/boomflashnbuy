@@ -1201,7 +1201,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   lookupCode(code).then(info=>{const w=$('#bmw');if(!$('#boomv'))return;
    if(info){bfbStat('found');q=info.q;name=info.name;dep=info.dep||guessDep(info.q+' '+(info.brand||''));const sp=$('#bmsp')&&$('#bmsp').value;showCard(info.name,(info.brand?info.brand+' · ':'')+code,fixBtn());if(sp)$('#bmsp').value=sp;bindFix(()=>q,v=>{q=v;name=v})}
    else{bfbStat('nf');nf=true;q='';if(w)w.outerHTML=askBox(code,v=>{q=v;name=v;dep=guessDep(v)});const bt=btn.querySelector('.bm-tx');if(bt)bt.textContent=PLK[lang][3]+' →'}})};
- const onFail=()=>{msg.textContent=K.camNo;o.querySelector('.bm-cam').classList.add('off');$('#bmocr').hidden=true};
+ const onFail=()=>{msg.textContent=K.camNo;o.querySelector('.bm-cam').classList.add('off');$('#bmocr').hidden=true;if(IAB)iabHint(msg)};
  boomCam=camStart(v,onCode,onFail,{onReady:api=>{camTip(o);const cp=api.caps();
    if(cp.torch){const t=$('#bt-t');t.hidden=false;let on=false;t.onclick=async()=>{on=!on;await api.torch(on);t.classList.toggle('on',on)}}
    if(cp.zoom&&cp.zoom.max>=1.5){const z=$('#bt-z');z.hidden=false;let on=false;z.onclick=async()=>{on=!on;await api.zoom(on?Math.min(2.5,cp.zoom.max):cp.zoom.min||1);z.classList.toggle('on',on)}}},
@@ -1352,6 +1352,18 @@ function bfApply(){if(!bfOn())return;const K=BFT[lang]||BFT.en;document.body.cla
  if(!document.querySelector('.bfbar')){const b=document.createElement('div');b.className='bfbar';const one=`<span><b>${K[0]}</b> · ${K[1]} · ${K[2]} ·</span>`;b.innerHTML=`<div class="trk">${one.repeat(6)}</div>`;document.body.insertBefore(b,document.body.firstChild)}
  const h=document.getElementById('hero');if(h&&!h.querySelector('.bftag')){const g=document.createElement('div');g.className='bftag';g.innerHTML=K[0]+'<small style="font:italic 800 13px var(--display);opacity:.85">'+K[1]+'</small>';h.insertBefore(g,h.firstChild)}}
 try{bfApply();new MutationObserver(()=>{const h=document.getElementById('hero');if(document.body.classList.contains('bf')&&h&&!h.querySelector('.bftag'))bfApply()}).observe(document.getElementById('hero')||document.body,{childList:true})}catch(e){}
+/* Browser interni di Instagram/Facebook/TikTok: la fotocamera può essere bloccata.
+   Android: il tasto "Prova" riapre la pagina in Chrome con la fotocamera già pronta.
+   iPhone: si prova nel browser interno; se la fotocamera non parte, tasto "Apri in Safari" + istruzioni. */
+const IAB=/Instagram|FBAN|FBAV|FB_IAB|FBIOS|musical_ly|Bytedance|TikTok/i.test(navigator.userAgent||'');
+const ANDR=/Android/i.test(navigator.userAgent||'');
+const IAT={it:['Apri in Safari','Oppure tocca ⋯ in alto e scegli “Apri nel browser”.'],en:['Open in Safari','Or tap ⋯ at the top and choose “Open in browser”.'],es:['Abrir en Safari','O toca ⋯ arriba y elige “Abrir en el navegador”.'],fr:['Ouvrir dans Safari','Ou touche ⋯ en haut et choisis « Ouvrir dans le navigateur ».'],de:['In Safari öffnen','Oder oben auf ⋯ tippen und „Im Browser öffnen“ wählen.'],pt:['Abrir no Safari','Ou toca em ⋯ no topo e escolhe “Abrir no navegador”.']};
+function iabUrl(){const u=new URL(location.href);u.searchParams.set('boom','1');u.searchParams.delete('prova');u.searchParams.delete('try');return u}
+function iabOut(){try{const u=iabUrl();location.href='intent://'+u.host+u.pathname+u.search+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u.href)+';end'}catch(e){}}
+function iabHint(after){try{if(document.getElementById('iabh'))return;const T=IAT[lang]||IAT.en,d=document.createElement('div');d.id='iabh';d.style.cssText='margin:12px auto;max-width:340px;text-align:center';
+ if(ANDR){d.innerHTML=`<button type="button" style="background:#D4FF4A;color:#0B0C0A;border:0;border-radius:16px;padding:16px;font-weight:800;font-size:18px;width:100%;display:block;text-decoration:none">🌐 Chrome →</button>`;d.querySelector('button').onclick=iabOut}
+ else{const u=iabUrl();d.innerHTML=`<a style="background:#D4FF4A;color:#0B0C0A;border:0;border-radius:16px;padding:16px;font-weight:800;font-size:18px;width:100%;display:block;text-decoration:none" href="x-safari-${u.href}">🧭 ${T[0]} →</a><small style="display:block;margin-top:8px;opacity:.75">${T[1]}</small>`}
+ after.insertAdjacentElement('afterend',d)}catch(e){}}
 /* "Prova ora": chi arriva dai social o con ?prova vede subito un solo tasto enorme che apre la fotocamera */
 const PRV={it:{h:'Prova <b>adesso</b>',p:'Prendi un prodotto che hai in casa: una bottiglia, un libro, un barattolo.',b:'Inquadra un codice a barre',s:'Gratis · niente da installare · dal browser',k:'Prima guardo l’app'},
 en:{h:'Try it <b>now</b>',p:'Grab anything at home: a bottle, a book, a jar.',b:'Scan a barcode',s:'Free · nothing to install · in your browser',k:'Show me the app first'},
@@ -1359,11 +1371,11 @@ es:{h:'Pruébalo <b>ahora</b>',p:'Coge algo que tengas en casa: una botella, un 
 fr:{h:'Essaie <b>maintenant</b>',p:'Prends un produit chez toi : une bouteille, un livre, un pot.',b:'Scanne un code-barres',s:'Gratuit · rien à installer · dans le navigateur',k:'D’abord voir l’app'},
 de:{h:'Jetzt <b>testen</b>',p:'Nimm irgendwas von zu Hause: eine Flasche, ein Buch, ein Glas.',b:'Barcode scannen',s:'Kostenlos · nichts installieren · im Browser',k:'Erst die App ansehen'},
 pt:{h:'Experimenta <b>já</b>',p:'Pega num produto que tenhas em casa: uma garrafa, um livro, um frasco.',b:'Lê um código de barras',s:'Grátis · nada para instalar · no navegador',k:'Primeiro vejo a app'}};
-(function(){try{const P=new URLSearchParams(location.search),src=P.get('src')||'';const want=P.has('prova')||P.has('try')||/^(ig|fb|yt|tut|tt|wa)$/.test(src);if(!want||P.get('q'))return;const ls=localStorage;if(!P.has('prova')&&!P.has('try')&&ls.getItem('snb-prv'))return;ls.setItem('snb-prv','1');
+(function(){try{const P=new URLSearchParams(location.search),src=P.get('src')||'';const want=P.has('prova')||P.has('try')||/^(ig|fb|yt|tut|tt|wa)$/.test(src);if(!want||P.get('q')||P.get('boom')==='1')return;const ls=localStorage;if(!P.has('prova')&&!P.has('try')&&ls.getItem('snb-prv'))return;ls.setItem('snb-prv','1');
  const K=PRV[lang]||PRV.en,o=document.createElement('div');o.className='prv';o.id='prv';
  o.innerHTML=`<img src="${typeof LOGO!=='undefined'?LOGO:'/icons/icon-192.png'}" alt=""><h2>${K.h}</h2><p>${K.p}</p><button class="big" type="button" id="prvgo"><span>📷</span>${K.b}</button><small>${K.s}</small><button class="skip" type="button" id="prvsk">${K.k}</button>`;
  document.body.appendChild(o);
- $('#prvgo').onclick=()=>{bfbStat('prova');o.remove();boomOpen()};$('#prvsk').onclick=()=>o.remove();
+ $('#prvgo').onclick=()=>{bfbStat('prova');if(IAB&&ANDR){iabOut();return}o.remove();boomOpen()};$('#prvsk').onclick=()=>o.remove();
 }catch(e){}})();
 /* contatore anonimo (nessun dato personale): utenti nuovi, attivi, installazioni, scansioni, clic Amazon */
 // provenienza (es. ?src=yt dai video YouTube): si ricorda la prima, per misurare quanti arrivano dai video e cosa fanno dopo
