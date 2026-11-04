@@ -1174,9 +1174,13 @@ addEventListener('pageshow',()=>setTimeout(checkPend,300));
 const BK={it:'Per tornare all’app usa ◀ Indietro',en:'To come back, use ◀ Back',es:'Para volver, usa ◀ Atrás',fr:'Pour revenir, utilise ◀ Retour',de:'Zurück zur App mit ◀ Zurück',pt:'Para voltar, usa ◀ Voltar'};
 const isPhone=()=>matchMedia('(pointer:coarse)').matches&&innerWidth<900;
 function goAmazon(url){bfbStat('amz');try{const u=new URL(location.href);if(u.searchParams.has('boom')||u.searchParams.has('scan')||u.searchParams.has('go')){u.searchParams.delete('boom');u.searchParams.delete('scan');u.searchParams.delete('go');history.replaceState(null,'',u.pathname+(u.search?u.search:''))}}catch(e){}
- let n=0;try{n=+localStorage.getItem('snb-bk')||0;localStorage.setItem('snb-bk',n+1)}catch(e){}
- if(n<3){toast(BK[lang]||BK.en);setTimeout(()=>location.href=url,1100)}else setTimeout(()=>location.href=url,350)}
-document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href*="amazon."]');if(!a)return;kaching();if(!isPhone()||installed())return;e.preventDefault();goAmazon(a.href)},true);
+ /* Apertura immediata, nello stesso tocco: così il telefono passa all'app Amazon (dove l'utente è già loggato) e Amazon conserva il nostro tag.
+    Android: app Amazon diretta (se non c'è, il browser). iPhone dentro Instagram/Facebook: Safari, non il browser interno dove si è sloggati. */
+ try{if(typeof ANDR!=='undefined'&&ANDR){const u=new URL(url);location.href='intent://'+u.host+u.pathname+u.search+'#Intent;scheme=https;package=com.amazon.mShop.android.shopping;S.browser_fallback_url='+encodeURIComponent(url)+';end';return}
+  if(typeof IAB!=='undefined'&&IAB){const t=Date.now();location.href='x-safari-'+url;setTimeout(()=>{if(!document.hidden&&Date.now()-t<2500)location.href=url},800);return}}catch(e){}
+ location.href=url}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href*="amazon."]');if(!a)return;kaching();
+ if(!isPhone()||(installed()&&!(typeof ANDR!=='undefined'&&ANDR))){bfbStat('amz');return}e.preventDefault();goAmazon(a.href)},true);
 
 /* --- schermata BOOM --- */
 let boomCam=null;
@@ -1185,6 +1189,7 @@ function boomClose(instant,toApp){if(boomCam){boomCam.stop();boomCam=null}const 
 const CAMTIP={"it": ["Stanco della richiesta fotocamera?", "Tocca <b>aA</b> nella barra di Safari → <b>Impostazioni sito web</b> → <b>Fotocamera: Consenti</b>. Non te lo chiederà più.", "Ok, fatto"], "en": ["Tired of the camera prompt?", "Tap <b>aA</b> in Safari’s address bar → <b>Website Settings</b> → <b>Camera: Allow</b>. It won’t ask again.", "Ok, done"], "es": ["¿Cansado del aviso de la cámara?", "Toca <b>aA</b> en la barra de Safari → <b>Ajustes del sitio web</b> → <b>Cámara: Permitir</b>. No te lo volverá a pedir.", "Vale, hecho"], "fr": ["Marre de la demande d’accès à la caméra ?", "Touche <b>aA</b> dans la barre de Safari → <b>Réglages du site web</b> → <b>Caméra : Autoriser</b>. Elle ne sera plus demandée.", "Ok, c’est fait"], "de": ["Nervt die Kamera-Abfrage?", "Tippe in Safari auf <b>aA</b> → <b>Website-Einstellungen</b> → <b>Kamera: Erlauben</b>. Dann wird nicht mehr gefragt.", "Ok, erledigt"], "pt": ["Farto do pedido da câmara?", "Toca em <b>aA</b> na barra do Safari → <b>Definições do site</b> → <b>Câmara: Permitir</b>. Não volta a pedir.", "Ok, feito"]};
 /* iPhone/Safari chiede il permesso fotocamera a ogni apertura: suggerimento (una volta sola) per consentirla per sempre su questo sito */
 function camTip(host){try{if(!/iP(hone|ad|od)/.test(navigator.userAgent)||localStorage.getItem('snb-camtip'))return;const n=+(localStorage.getItem('snb-camn')||0)+1;localStorage.setItem('snb-camn',n);if(n<2)return;const t=CAMTIP[lang]||CAMTIP.en;const d=document.createElement('div');d.className='camtip';d.innerHTML=`<b>📷 ${t[0]}</b><span>${t[1]}</span><button type="button">${t[2]}</button>`;d.querySelector('button').onclick=()=>{try{localStorage.setItem('snb-camtip','1')}catch(e){}d.remove()};host.appendChild(d)}catch(e){}}
+const CRT={it:'💡 Su Amazon mettilo nel carrello: lo ritrovi lì quando vuoi e decidi con calma.',en:'💡 On Amazon, add it to your cart: it waits there while you decide.',es:'💡 En Amazon, añádelo al carrito: te espera ahí mientras decides.',fr:'💡 Sur Amazon, ajoute-le au panier : il t’attend pendant que tu décides.',de:'💡 Leg es bei Amazon in den Warenkorb: Dort wartet es, während du entscheidest.',pt:'💡 Na Amazon, junta-o ao carrinho: fica lá à tua espera enquanto decides.'};
 function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const K=BM[lang]||BM.en;
  const o=document.createElement('div');o.id='boomv';o.className='boomv';
  o.innerHTML=`<div class="bm-top"><img src="${LOGO}" alt=""><b class="q" id="bmw0">BOOM?</b><span>FlashnBuy</span><button class="snd" type="button"></button></div>
@@ -1201,7 +1206,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
  const btn=$('#bmbtn'),card=$('#bmcard'),msg=$('#bmmsg'),v=o.querySelector('video');
  const toFound=()=>{st='found';o.classList.add('hit');const w0=$('#bmw0');if(w0){w0.textContent='BOOM!';w0.classList.remove('q');w0.classList.add('lit')}$('#bmgo').hidden=false;btn.classList.add('found');btn.querySelector('.bm-ic').textContent='✓';btn.querySelector('.bm-tx').textContent=K.found+' →';$('#bmocr').hidden=true};
  const showCard=(title,sub,extra)=>{card.hidden=false;card.innerHTML=`<small>${sub}</small><b>${esc(title)}</b>${extra||''}
-   <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label><p class="bm-anon">${PRN[lang]||PRN.en}</p>
+   <label class="bm-pq"><span class="bm-pl">${K.store}<em>${K.opt}</em></span><span><input id="bmsp" inputmode="decimal" placeholder="0"><b>${cur()}</b></span></label><p class="bm-anon">${PRN[lang]||PRN.en}</p><p class="bm-anon" style="opacity:1">${CRT[lang]||CRT.en}</p>
    <button type="button" class="bm-again" id="bmag">📷 ${K.again}</button>`;$('#bmag').onclick=boomOpen};
  const onCode=code=>{bfbStat('scan');beep();try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}toFound();msg.textContent='';
   const isNum=/^\d{6,14}$/.test(code);q=isNum?code:enrichQ(code.slice(0,80));name=q;ean=isNum?code:'';addRecent(q);
@@ -1223,7 +1228,7 @@ function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const 
   if(!q||q===ean){const i=$('#nfq');if(i){i.focus();i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake')}return}if(nf&&ean)teachCode(ean,q);
   const sp=parseFloat((($('#bmsp')||{}).value||'').replace(',','.'));const url=amazonUrl({what:q},{dep:dep});
   if(sp>0){try{localStorage.setItem('snb-pend',JSON.stringify({t:Date.now(),n:name||q,store:sp,e:ean}))}catch(e){}reportPrice({e:ean,n:name||q,p:sp})}
-  kaching();if(isPhone()&&!installed()){goAmazon(url);return}const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener sponsored';document.body.appendChild(a);a.click();a.remove()}}
+  kaching();if(isPhone()&&(!installed()||(typeof ANDR!=='undefined'&&ANDR))){goAmazon(url);return}const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener sponsored';document.body.appendChild(a);a.click();a.remove()}}
 
 const DIL={it:'Dillo, cerco io',en:'Say it, I’ll find it',es:'Dilo, yo lo busco',fr:'Dis-le, je cherche',de:'Sag es, ich suche',pt:'Diz, eu procuro'};
 function home(){const T=L[lang],Y=X[lang];mode='home';wz=null;try{if(!new URLSearchParams(location.search).get('q')||document.body.dataset.hv)$('#q').value=''}catch(e){}document.body.dataset.hv=1;const sv=getSaved();document.body.classList.add('home');tab('home');
