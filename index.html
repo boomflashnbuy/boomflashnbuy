@@ -306,6 +306,7 @@ body.bf .prv{background:radial-gradient(120% 70% at 50% 15%,#2a3a10 0%,#000 62%)
 form#f.bm-in{animation:bmup .35s cubic-bezier(.2,.8,.2,1)}
 .snd{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--lime);background:rgba(212,255,74,.1);color:var(--lime);cursor:pointer;padding:0;margin-right:auto;transition:all .2s}.snd svg{width:24px;height:24px}
 .snd.off{border-color:#2c3027;background:#15180f;color:#5d6459}.dlb:not([hidden])~*{}.top .snd+.dlb:not([hidden]){margin-right:auto}.top .snd:has(+.dlb:not([hidden])){margin-right:0}
+.bm-bf{font:italic 900 14px var(--display);font-style:italic;background:var(--lime);color:#0B0C0A;padding:6px 10px;border-radius:9px;transform:rotate(-4deg);letter-spacing:.5px;white-space:nowrap;box-shadow:0 0 14px rgba(212,255,74,.55);animation:bmbf 1.2s ease-in-out infinite}@keyframes bmbf{50%{opacity:.5;box-shadow:none}}@media (max-width:360px){.bm-bf{font-size:11px;padding:5px 7px}}@media (prefers-reduced-motion:reduce){.bm-bf{animation:none}}
 .bm-top .snd{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0}
 .bm-top b.q{animation:bmq 1s steps(2,jump-none) infinite}.bm-top b.q{animation:bmq 1.1s ease-in-out infinite}@keyframes bmq{0%,100%{opacity:1}50%{opacity:.25}}
 .bm-top b.lit{color:var(--lime);-webkit-text-stroke:0;text-shadow:0 0 18px rgba(212,255,74,.9),0 0 4px #fff;animation:bmlit .5s ease}@keyframes bmlit{0%{transform:scale(1.35)}100%{transform:scale(1)}}
@@ -1208,7 +1209,7 @@ const CAMCR={it:['Su iPhone il permesso si salva per sempre solo in Safari: apri
 const CRT={it:'💡 Su Amazon mettilo nel carrello: lo ritrovi lì quando vuoi e decidi con calma.',en:'💡 On Amazon, add it to your cart: it waits there while you decide.',es:'💡 En Amazon, añádelo al carrito: te espera ahí mientras decides.',fr:'💡 Sur Amazon, ajoute-le au panier : il t’attend pendant que tu décides.',de:'💡 Leg es bei Amazon in den Warenkorb: Dort wartet es, während du entscheidest.',pt:'💡 Na Amazon, junta-o ao carrinho: fica lá à tua espera enquanto decides.'};
 function boomOpen(){boomClose(true);if(scanStop){scanStop();scanStop=null}const K=BM[lang]||BM.en;
  const o=document.createElement('div');o.id='boomv';o.className='boomv';
- o.innerHTML=`<div class="bm-top"><img src="${LOGO}" alt=""><b class="q" id="bmw0">BOOM?</b><span>FlashnBuy</span><button class="snd" type="button"></button></div>
+ o.innerHTML=`<div class="bm-top"><img src="${LOGO}" alt=""><b class="q" id="bmw0">BOOM?</b>${(typeof bfOn==='function'&&bfOn())?'<i class="bm-bf">BLACK FRIDAY</i>':''}<span>FlashnBuy</span><button class="snd" type="button"></button></div>
   <div class="bm-cam"><video playsinline muted></video><i class="bm-frame"></i><i class="bm-laser"></i>
    <div class="vtools"><button type="button" id="bt-t" hidden>🔦</button><button type="button" id="bt-z" hidden>🔍 2×</button></div></div>
   <p class="bm-msg" id="bmmsg">${K.t}</p>
